@@ -177,21 +177,6 @@ def _pad_rect(
     return rect_args
 
 
-def _new_rrect(
-    width: float,
-    height: float,
-    rad: float = 0,
-    pad: float | tuple[float, ...] = 0,
-    margin: float | tuple[float, ...] = 0,
-) -> EtreeElement:
-    """A rounded rectangle starting at (0, 0)"""
-    pads = _expand_pad_argument(pad)
-    margins = _expand_pad_argument(margin)
-
-    x = pad_tuple[0]
-    y = 3
-
-
 def _group_double_1s(slices: list[int]) -> list[list[int]]:
     """Working from the end of a list, group any two consecutive 1s
 
@@ -300,22 +285,8 @@ def show_svg(
     # palette
     palette_gap = _PALETTE_GAP
     boxes_high = _ROOT_HIGH - _PALETTE_GAP * (len(dist) - 1)
-    accent_colors = []
-
-    # boxes_high = show_high - palette_gap * 4
-    # if False: # dist[-2:] == [1, 1]:
-    #     gaps = len(dist) - 2
-    #     palette_gap = palette_gap * 4 / (len(dist) - 2)
-    #     accent_colors = palette_colors[-2:]
-    #     palette_colors = palette_colors[:-2]
-    # else:
-    #     gaps = len(dist) - 1
-    #     palette_gap = palette_gap * 4 / max(len(dist) - 1, 4)
-    #     accent_colors = []
-    # boxes_high = show_high - palette_gap * gaps
 
     box_left = show_wide - hori_margin - box_wide
-    # box_at = vert_margin
     box_at = 0
 
     # -------------------------------------------------------------------------
@@ -358,39 +329,8 @@ def show_svg(
                 fill=hex_color,
             )
             box_at_x += each_box_wide + _PALETTE_GAP
-
         box_at_y += box_high + _PALETTE_GAP
 
-    # print(f"{box_wide=}")
-    # for i, color in enumerate(palette_colors):
-    #     box_high = boxes_high / sum(dist) * dist[i]
-    #     new_sub_element(
-    #         masked,
-    #         "rect",
-    #         x=box_left,
-    #         y=box_at,
-    #         width=box_wide,
-    #         height=box_high,
-    #         fill=rgb_to_hex(tuple(color)),
-    #     )
-    #     box_at += box_high + palette_gap
-
-    # box_high = boxes_high / sum(dist) * 2
-    # accent_wide = box_wide - palette_gap * (len(accent_colors) - 1)
-    # accent_wide /= max(len(accent_colors), 1)
-    # accent_at_x = show_wide - hori_margin - box_wide
-    # accent_at_y = show_high - box_high
-    # for color in accent_colors:
-    #     new_sub_element(
-    #         masked,
-    #         "rect",
-    #         x=accent_at_x,
-    #         y=accent_at_y,
-    #         width=accent_wide,
-    #         height=box_high,
-    #         fill=rgb_to_hex(tuple(color)),
-    #     )
-    #     accent_at_x += accent_wide + palette_gap
 
     masked.set("clip-path", "url(#color_bar_clip)")
 
