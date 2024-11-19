@@ -1,0 +1,6 @@
+Update-PythonVenv.ps1
+requirements.txt
+dev-requirements.txt
+binaries/
+.vimrc
+.vimspector.json
