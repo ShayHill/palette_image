@@ -16,10 +16,13 @@ copies of itself with non-matrix transformations.
 :created: 2024-11-20
 """
 
-from svg_ultralight import BoundingBox
 from typing import Self
+
 from lxml.etree import _Element as EtreeElement  # type: ignore
+from PIL.Image import Image as ImageType
+from svg_ultralight import BoundingBox
 from svg_ultralight.constructors import new_element
+
 
 def _expand_pad(pad: float | tuple[float, ...]) -> tuple[float, float, float, float]:
     """Expand a pad argument into a 4-tuple."""
@@ -99,3 +102,55 @@ class Bbox(BoundingBox):
     def copy(self) -> Self:
         """Return a copy of this bounding box after applying transforms."""
         return type(self)(self.x, self.y, self.width, self.height)
+
+
+def _symmetric_crop(
+    image: ImageType, center: tuple[float, float] | None = None
+) -> ImageType:
+    """Crop an image symmetrically around a center point.
+
+    :param image: PIL.Image instance
+    :param center: optional center point for cropping. Proportions of image with and
+        image height, so the default value, (0.5, 0.5), is the true center of the
+        image. (0.4, 0.5) would crop 20% off the right side of the image.
+    :return: PIL.Image instance
+    """
+    if center is None:
+        return image
+    assert all(0 < x < 1 for x in center), "center must be between 0 and 1"
+    xd, yd = (min(x, 1 - x) for x in center)
+    left, right = sorted(x * image.width for x in (center[0] - xd, center[0] + xd))
+    top, bottom = sorted(x * image.height for x in (center[1] - yd, center[1] + yd))
+    assert right > left
+    assert bottom > top
+    return image.crop((left, top, right, bottom))
+
+
+def fit_image_to_bbox_ratio(
+    image: ImageType, bbox: Bbox, center: tuple[float, float] | None = None
+) -> ImageType:
+    """Crop an image to the ratio of a bounding box.
+
+    :param image: PIL.Image instance
+    :param bbox: Bbox instance
+    :param center: optional center point for cropping. Proportions of image with and
+        image height, so the default value, (0.5, 0.5), is the true center of the
+        image. (0.4, 0.5) would crop 20% off the right side of the image.
+    :return: PIL.Image instance
+
+    This crops the image to the specified ratio. It's not a resize, so it will cut
+    off the top and bottom or the sides of the image to fit the ratio.
+    """
+    image = _symmetric_crop(image, center)
+    width, height = image.size
+
+    ratio = bbox.width / bbox.height
+    if width / height > ratio:
+        new_width = height * ratio
+        left = (width - new_width) / 2
+        right = width - left
+        return image.crop((left, 0, right, height))
+    new_height = width / ratio
+    top = (height - new_height) / 2
+    bottom = height - top
+    return image.crop((0, top, width, bottom))

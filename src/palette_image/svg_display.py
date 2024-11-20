@@ -11,11 +11,9 @@
 import base64
 import io
 import os
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Iterable, Sequence
 
-# import palette.metaparemeters as metaparameters
-# from palette.color_conversion import rgb_to_hex
 from basic_colormath import rgb_to_hex
 from lxml import etree
 from lxml.etree import _Element as EtreeElement  # type: ignore
@@ -26,26 +24,25 @@ from svg_ultralight.constructors import new_sub_element
 
 from palette_image.color_block_ops import divvy_height, group_double_1s
 from palette_image.globs import BINARIES, INKSCAPE_EXE
-from palette_image.type_bbox import Bbox
+from palette_image.type_bbox import Bbox, fit_image_to_bbox_ratio
 
-_RGB = tuple[float, float, float]
-
-# width and height of output image
-_RATIO = (16, 9)
+# internal unit size of the svg
+RATIO = (16, 9)
 
 # space to leave between palette colors
-_PALETTE_GAP = 1.5 / 20
+PALETTE_GAP = 3 / 40
 
 # width of thin white border around the image
-_PADDING = 1 / 15
+PADDING = 1 / 15
 
 # radius of rounded corners
-_RECT_RADIUS = 1 / 4
+CORNER_RAD = 1 / 4
+
+_CLIP_PATH_ID = "color_bar_clip"
 
 
 def _get_svg_embedded_image_str(image: ImageType) -> str:
-    """
-    The string you'll need to embed an image in an svg
+    """Return the string you'll need to embed an image in an svg.
 
     :param image: PIL.Image instance
     :return: argument for xlink:href
@@ -89,8 +86,7 @@ crops = {
 
 
 def get_colors_string(colors: Iterable[tuple[float, float, float]]) -> str:
-    """
-    Print a formatted string of color-channel values
+    """Return a formatted string of color-channel values
 
     :param colors: a list of colors
     :return: every color value as :3n
@@ -103,103 +99,52 @@ def get_colors_string(colors: Iterable[tuple[float, float, float]]) -> str:
     return "-".join([rgb_to_hex(x)[1:] for x in colors])
     # return "-".join(f"{x:03n}" for x in color_values)
 
-def _fit_image(image: ImageType, bbox: Bbox) -> ImageType:
-    """Crop an image to the ratio of a bounding box.
 
-    :param image: PIL.Image instance
-    :param bbox: Bbox instance
-    :return: PIL.Image instance
-
-    This crops the image to the specified ratio. It's not a resize, so it will cut
-    off the top and bottom or the sides of the image to fit the ratio.
-    """
-    ratio = bbox.width / bbox.height
-    width, height = image.size
-    if width / height > ratio:
-        new_width = height * ratio
-        left = (width - new_width) / 2
-        right = width - left
-        return image.crop((left, 0, right, height))
-    new_height = width / ratio
-    top = (height - new_height) / 2
-    bottom = height - top
-    return image.crop((0, top, width, bottom))
-
-
-# TODO: this works but it's a mess
 def show_svg(
     filename: Path | str,
-    palette_colors: Sequence[_RGB],
+    palette_colors: Sequence[tuple[float, float, float]],
     outfile: Path,
     dist: list[int],
-    crop: tuple[float, float, float, float] = (0, 0, 0, 0),
+    center: tuple[float, float] | None = None,
     comment: str = "",
     print_width: float = 800,
 ) -> None:
-    """
-    The format for most of the palettes. Colors on top.
+    """Create an svg with an image and a color bar.
 
     :param filename:
     :param palette_colors:
     :param accent_colors:
     :param outfile:
     :return:
-
-    The output images are 16/9, but I put in a transparent horizontal margin on the
-    left and right of the output image so Twitter wouldn't cut off my edges. Adds a
-    lot of complexity, but I'm keeping it because I'm happy with how the palettes
-    look.
-
-    There's also no reason padding, etc. must be rounded to integers. There was a bug
-    in the first version of svg-ultralight that caused problems with floats. That bug
-    is long-since fixed, but again I'm still rounding to integers so new palettes
-    will look as close as possible to old palettes.
     """
     svg_doc = ""  # metaparameters.document_metaparameters()
     svg_doc += f"\n{outfile.stem}"
 
-    root_bbox = Bbox(0, 0, _RATIO[0], _RATIO[1])
-    content_bbox = root_bbox.pad(-_PADDING)
-    palette_gap = _PALETTE_GAP
+    root_bbox = Bbox(0, 0, RATIO[0], RATIO[1])
+    content_bbox = root_bbox.pad(-PADDING)
 
     # common case groups = [[1], [1], [1], [1], [1, 1]] will be squares.
-    blocks_wide = (content_bbox.height - palette_gap * 4) / 5
+    blocks_wide = (content_bbox.height - PALETTE_GAP * 4) / 5
 
     root = new_svg_root(*root_bbox.values, print_width_=print_width)
     if comment:
         root.append(etree.Comment(comment))
 
     # thin white border around the image
-    root.append(root_bbox.get_rect(_RECT_RADIUS + _PADDING, fill = "white"))
+    root.append(root_bbox.get_rect(CORNER_RAD + PADDING, fill="white"))
 
     # palette rounded corners mask
     defs = new_sub_element(root, "defs")
-    color_bar_clip = new_sub_element(defs, "clipPath", id="color_bar_clip")
-    color_bar_clip.append(content_bbox.get_rect(_RECT_RADIUS))
+    color_bar_clip = new_sub_element(defs, "clipPath", id=_CLIP_PATH_ID)
+    color_bar_clip.append(content_bbox.get_rect(CORNER_RAD))
 
     # image and color bar
     masked = new_sub_element(root, "g")
 
     # image
-    image_bbox = content_bbox.pad((0, -(palette_gap + blocks_wide), 0, 0))
-    image = Image.open(filename)
-    # if crop:  # := crops.get(os.path.basename(filename)):
-    #     width, height = image.size
-    #     left = width * crop[0]
-    #     top = height * crop[1]
-    #     right = width * (1 - crop[2])
-    #     bottom = height * (1 - crop[3])
-    #     image = image.crop((left, top, right, bottom))
-    # image = ImageOps.fit(image, (round(image_bbox.width), round(image_bbox.height/10)))
-    image = _fit_image(image, image_bbox)
-    svg_image = new_sub_element(
-        masked,
-        "image",
-        x=image_bbox.x,
-        y=image_bbox.y,
-        width=image_bbox.width,
-        height=image_bbox.height,
-    )
+    image_bbox = content_bbox.pad((0, -(PALETTE_GAP + blocks_wide), 0, 0))
+    image = fit_image_to_bbox_ratio(Image.open(filename), image_bbox, center)
+    svg_image = new_sub_element(masked, "image", **image_bbox.as_dict)
     svg_image.set(
         etree.QName(NSMAP["xlink"], "href"), _get_svg_embedded_image_str(image)
     )
@@ -208,15 +153,14 @@ def show_svg(
     # color blocks
     # -------------------------------------------------------------------------
 
-    # todo: make this a cut
-    blocks_bbox = content_bbox.reset_lims(x = image_bbox.x2 + palette_gap)
-    blocks_bbox = blocks_bbox.pad(palette_gap / 2)
+    blocks_bbox = content_bbox.reset_lims(x=image_bbox.x2 + PALETTE_GAP)
+    blocks_bbox = blocks_bbox.pad(PALETTE_GAP / 2)
 
     hori_groups = group_double_1s(dist)
     heights = divvy_height(blocks_bbox, hori_groups)
 
     blocks: list[Bbox] = []
-    for height, block in zip(heights, hori_groups):
+    for height, block in zip(heights, hori_groups, strict=True):
         if len(block) == 1:
             block_bbox = blocks_bbox.reset_dims(height=height)
             if blocks:
@@ -232,16 +176,15 @@ def show_svg(
             blocks += [block_a_bbox, block_b_bbox]
 
     icolors = iter(palette_colors)
-    for block in (x.pad(-palette_gap / 2) for x in blocks):
+    for block in (x.pad(-PALETTE_GAP / 2) for x in blocks):
         hex_color = rgb_to_hex(next(icolors))
         _ = new_sub_element(masked, "rect", **block.as_dict, fill=hex_color)
 
-    masked.set("clip-path", "url(#color_bar_clip)")
+    masked.set("clip-path", f"url(#{_CLIP_PATH_ID})")
 
     # write_svg("temp2.svg", screen)
-    # TODO: return full colstr
     # colstr = get_colors_string(palette_colors + accent_colors)
-    aaa = os.listdir(Path(outfile).parent)
+    # aaa = os.listdir(Path(outfile).parent)
     # if any(colstr in x for x in aaa):
     # return
     # full_name = outfile[:-4] + "_" + colstr + outfile[-4:]
@@ -255,6 +198,5 @@ show_svg(
     [(25, 25, 25), (0, 0, 0), (255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0)],
     BINARIES / "output.svg",
     [1, 1, 1, 1, 1, 1],
-    (0, 0, 0, 0),
-    "Pencils",
+    comment="Pencils",
 )
