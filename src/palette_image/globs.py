@@ -13,4 +13,3 @@ _PROJECT = Path(__file__).parent.parent.parent
 BINARIES = _PROJECT / "binaries"
 
 BINARIES.mkdir(exist_ok=True)
-

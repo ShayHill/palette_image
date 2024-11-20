@@ -118,7 +118,7 @@ def show_svg(
     :return:
     """
     svg_doc = ""  # metaparameters.document_metaparameters()
-    svg_doc += f"\n{outfile.stem}"
+    svg_doc += f"{outfile.stem}"
 
     root_bbox = Bbox(0, 0, RATIO[0], RATIO[1])
     content_bbox = root_bbox.pad(-PADDING)
@@ -128,7 +128,7 @@ def show_svg(
 
     root = new_svg_root(*root_bbox.values, print_width_=print_width)
     if comment:
-        root.append(etree.Comment(comment))
+        root.addprevious(etree.Comment(f"{svg_doc}\n{comment}"))
 
     # thin white border around the image
     root.append(root_bbox.get_rect(CORNER_RAD + PADDING, fill="white"))

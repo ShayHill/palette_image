@@ -21,12 +21,13 @@ attempting to keep all dist=1 to the same height. Where possible, only dist valu
 :created: 2024-11-20
 """
 
+from collections.abc import Iterator
+
 from palette_image.type_bbox import Bbox
 
-from typing import Iterator
 
 def group_double_1s(slices: list[int]) -> list[list[int]]:
-    """Working from the end of a list, group any two consecutive 1s
+    """Working from the end of a list, group first two consecutive 1s.
 
     :param slices: a list of integers
     :return: a list of lists of integers, where each list is a single integer or [1, 1]
@@ -51,6 +52,7 @@ def group_double_1s(slices: list[int]) -> list[list[int]]:
             groups.append([i])
     return list(reversed(groups))
 
+
 def _is_single(group: list[int]) -> bool:
     """Identify singles in divvy_height."""
     return group == [1]
@@ -64,6 +66,7 @@ def _is_double(group: list[int]) -> bool:
 def divvy_height(
     bbox: Bbox,
     groups: list[list[int]],
+    *,
     _lock_singles: bool = True,
     _lock_doubles: bool = True,
 ) -> list[float]:
@@ -97,7 +100,7 @@ def divvy_height(
     heights: list[float | None] = [None] * len(groups)
 
     def zip_hg() -> Iterator[tuple[float | None, list[int]]]:
-        return zip(heights, groups)
+        return zip(heights, groups, strict=True)
 
     if _lock_singles:
         heights = [single_height if _is_single(g) else h for h, g in zip_hg()]
@@ -106,12 +109,12 @@ def divvy_height(
 
     if None not in heights:
         # nothing to stretch - try (False, True) then (False, False)
-        return divvy_height(bbox, groups, False, _lock_singles)
+        return divvy_height(
+            bbox, groups, _lock_singles=False, _lock_doubles=_lock_singles
+        )
 
     free_height = bbox.height - sum(filter(None, heights))
     per_slice = free_height / sum(sum(g) for h, g in zip_hg() if h is None)
     heights = [h or sum(g) * per_slice for h, g in zip_hg()]
 
     return list(filter(None, heights))
-
-
