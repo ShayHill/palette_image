@@ -15,4 +15,3 @@ RESOURCES = _PROJECT / "resources"
 
 for path in (BINARIES, RESOURCES):
     path.mkdir(exist_ok=True)
-
