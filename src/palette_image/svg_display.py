@@ -6,11 +6,14 @@
 
 """
 
+# padding reference: t, r, b, l
+
 import base64
 import io
 import os
 from pathlib import Path
 from typing import Any, List, Sequence
+from svg_ultralight import BoundingBox
 
 from lxml import etree
 from lxml.etree import _Element as EtreeElement  # type: ignore
@@ -59,8 +62,67 @@ _PADDING = max(1, round(_RESOLUTION / 15))
 
 
 # inferred values
-_ROOT_WIDE = round(_RATIO[0] * _RESOLUTION) - _PADDING
-_ROOT_HIGH = round(_RATIO[1] * _RESOLUTION) - _PADDING
+_ROOT_WIDE = round(_RATIO[0] * _RESOLUTION)
+_ROOT_HIGH = round(_RATIO[1] * _RESOLUTION)
+
+
+def _expand_pad(pad: float | tuple[float, ...]) -> tuple[float, float, float, float]:
+    """Expand a pad argument into a 4-tuple."""
+    if isinstance(pad, (int, float)):
+        return pad, pad, pad, pad
+    if len(pad) == 1:
+        return pad[0], pad[0], pad[0], pad[0]
+    if len(pad) == 2:
+        return pad[0], pad[1], pad[0], pad[1]
+    if len(pad) == 3:
+        return pad[0], pad[1], pad[2], pad[1]
+    return pad[0], pad[1], pad[2], pad[3]
+
+
+def _padded_bbox(bbox: BoundingBox, pad: float | tuple[float, ...] = 0) -> BoundingBox:
+    """Pad a bounding box.
+
+    :param bbox: the bounding box to pad
+    :param pad: the padding to add to the bounding box
+        (top, right, bottom, left)
+    :return: a new padded bounding box
+    """
+    top, right, bottom, left = _expand_pad(pad)
+    return BoundingBox(
+        bbox.x - left,
+        bbox.y - top,
+        bbox.width + (right + left),
+        bbox.height + (top + bottom),
+    )
+
+
+def _bbox_dict(bbox: BoundingBox) -> dict[str, float]:
+    """Return the dimensions of a bounding box."""
+    return {"x": bbox.x, "y": bbox.y, "width": bbox.width, "height": bbox.height}
+
+
+def _bbox_tuple(bbox: BoundingBox) -> tuple[float, float, float, float]:
+    """Return the dimensions of a bounding box."""
+    return bbox.x, bbox.y, bbox.width, bbox.height
+
+
+def _bbox_copy(
+    bbox: BoundingBox,
+    *,
+    x: float | None = None,
+    y: float | None = None,
+    width: float | None = None,
+    height: float | None = None,
+) -> BoundingBox:
+    """Return a new bounding box with updated dimensions."""
+    return BoundingBox(
+        x if x is not None else bbox.x,
+        y if y is not None else bbox.y,
+        width if width is not None else bbox.width,
+        height if height is not None else bbox.height,
+    )
+
+
 _HORI_MARGIN = round(_HORI_MARGIN_SCALE * _RESOLUTION)
 _PALETTE_GAP = round(_PALETTE_GAP_SCALE * _RESOLUTION)
 _SHOW_X = _HORI_MARGIN
@@ -164,6 +226,9 @@ def _pad_and_rad_rect_args(
     return rect_args
 
 
+import itertools as it
+
+
 def _group_double_1s(slices: list[int]) -> list[list[int]]:
     """Working from the end of a list, group any two consecutive 1s
 
@@ -176,13 +241,22 @@ def _group_double_1s(slices: list[int]) -> list[list[int]]:
         >>> _group_double_1s([1, 2, 3, 4, 1, 1])
         [[1], [2], [3], [4], [1, 1]]
     """
+    if all(x == 1 for x in slices):
+        return [[1]] * len(slices)
     groups: list[list[int]] = []
     for i in reversed(slices):
+        if any(len(x) > 1 for x in groups):
+            groups.append([i])
+            continue
         if i == 1 and groups and groups[-1] == [1]:
             groups[-1].append(1)
         else:
             groups.append([i])
     return list(reversed(groups))
+
+
+# class Geo:
+# @property
 
 
 # TODO: this works but it's a mess
@@ -219,51 +293,59 @@ def show_svg(
     svg_doc = ""  # metaparameters.document_metaparameters()
     svg_doc += f"\n{outfile.stem}"
 
-    padding = max(1, round(resolution / 15))
-    show_wide = round(16 * resolution) - padding
-    show_high = round(9 * resolution) - padding
-    hori_margin = round(hori_margin_scale * resolution)
+    root_bbox = BoundingBox(0, 0, _ROOT_WIDE, _ROOT_HIGH)
+    content_bbox = _padded_bbox(root_bbox, -_PADDING)
+
     palette_gap = round(palette_gap_scale * resolution)
 
     # ugly formula just de-parameterizes previous way of calculating box_wide from
     # number of palette entries. box_wide is now fixed for any number of palette
     # entries.
-    box_wide = (show_high - palette_gap * 4) / 5
+    box_wide = (content_bbox.height - palette_gap * 4) / 5
 
     # TODO: make global
     mask_round = resolution / 4
 
-    screen = new_svg_root(
-        0, 0, _ROOT_WIDE, _ROOT_HIGH, pad_=_PADDING, print_width_=f"{_ROOT_WIDE / 2}px"
-    )
+    screen = new_svg_root(*_bbox_tuple(root_bbox), print_width_=root_bbox.width / 2)
     if comment:
         screen.append(etree.Comment(comment))
 
     # white background behind entire image
-    rgeo = _pad_and_rad_rect_args(_SHOW_X, 0, _SHOW_WIDE, _ROOT_HIGH, pad=_PADDING, rad=mask_round)
+    rgeo = _pad_and_rad_rect_args(
+        root_bbox.x,
+        root_bbox.y,
+        root_bbox.width,
+        root_bbox.height,
+        rad=mask_round + _PADDING,
+    )
     _ = new_sub_element(screen, "rect", **rgeo, fill="white")
 
     # palette rounded corners mask
     defs = new_sub_element(screen, "defs")
     color_bar_clip = new_sub_element(defs, "clipPath", id="color_bar_clip")
-    rgeo = _pad_and_rad_rect_args(_SHOW_X, 0, _SHOW_WIDE, _ROOT_HIGH, rad=mask_round)
+    rgeo = _pad_and_rad_rect_args( **_bbox_dict(content_bbox), rad=mask_round)
     _ = new_sub_element(color_bar_clip, "rect", **rgeo)
 
     masked = new_sub_element(screen, "g")
 
     # image
-    image_wide = round(show_wide - hori_margin * 2 - palette_gap - box_wide)
+    image_bbox = _padded_bbox(content_bbox, (0, -(palette_gap + box_wide), 0, 0))
     image = Image.open(filename)
-    if crop:  # := crops.get(os.path.basename(filename)):
-        width, height = image.size
-        left = width * crop[0]
-        top = height * crop[1]
-        right = width * (1 - crop[2])
-        bottom = height * (1 - crop[3])
-        image = image.crop((left, top, right, bottom))
-    image = ImageOps.fit(image, (image_wide, show_high))
+    # if crop:  # := crops.get(os.path.basename(filename)):
+    #     width, height = image.size
+    #     left = width * crop[0]
+    #     top = height * crop[1]
+    #     right = width * (1 - crop[2])
+    #     bottom = height * (1 - crop[3])
+    #     image = image.crop((left, top, right, bottom))
+    image = ImageOps.fit(image, (round(image_bbox.width), round(image_bbox.height)))
     svg_image = new_sub_element(
-        masked, "image", x=hori_margin, y=0, width=image_wide, height=show_high
+        masked,
+        "image",
+        x=image_bbox.x,
+        y=image_bbox.y,
+        width=image_bbox.width,
+        height=image_bbox.height,
     )
     svg_image.set(
         etree.QName(NSMAP["xlink"], "href"), _get_svg_embedded_image_str(image)
@@ -271,56 +353,62 @@ def show_svg(
 
     # palette
     palette_gap = _PALETTE_GAP
-    boxes_high = _ROOT_HIGH - _PALETTE_GAP * (len(dist) - 1)
-
-    box_left = show_wide - hori_margin - box_wide
-    box_at = 0
 
     # -------------------------------------------------------------------------
     # color blocks
     # -------------------------------------------------------------------------
 
-    def _ttl_gap(boxes: list[Any]) -> float:
-        return _PALETTE_GAP * (len(boxes) - 1)
+    hg = palette_gap / 2
+    blocks_bbox = _padded_bbox(
+        content_bbox, (0, 0, 0, -(image_bbox.width + palette_gap))
+    )
+    blocks_bbox = _padded_bbox(blocks_bbox, hg)
+    consistent_single_height = blocks_bbox.width / 2
+    consistent_double_height = consistent_single_height * 2 + palette_gap
 
     # make all doubles the same height
-    consistent_double_height = (_ROOT_HIGH - _PALETTE_GAP * 4) / 5
 
     hori_groups = _group_double_1s(dist)
-    hori_groups = [[x] for x in dist]
-    total_gap = _ttl_gap(hori_groups)
-    total_doubles = sum(consistent_double_height for x in hori_groups if len(x) > 1)
-    # the combined vertical space occupied by all color boxes
-    boxes_high = _ROOT_HIGH - total_gap - total_doubles
-    free_slices = sum(x[0] for x in hori_groups if len(x) == 1)
+    if all(x == [1] for x in hori_groups):
+        consistent_single_height = blocks_bbox.height / len(dist)
+    free_height = blocks_bbox.height
+    free_height -= sum(consistent_double_height for x in hori_groups if len(x) > 1)
+    free_height -= sum(consistent_single_height for x in hori_groups if x == [1])
+    free_portions = sum(x[0] for x in hori_groups if len(x) == 1 and x != [1])
 
-    box_at_y = 0
-    icolors = iter(palette_colors)
-    for color, group in zip(palette_colors, hori_groups):
-        box_at_x = box_left
-        if len(group) == 1:
-            box_high = boxes_high * (group[0] / free_slices)
+    blocks: list[BoundingBox] = []
+    for i, block in enumerate(hori_groups):
+        if len(block) > 1:
+            height = consistent_double_height
+        elif block == [1]:
+            height = consistent_single_height
         else:
-            box_high = consistent_double_height
+            height = free_height * (block[0] / free_portions)
 
-        each_box_wide = (box_wide - _PALETTE_GAP * (len(group) - 1)) / len(group)
-        for _ in group:
-            hex_color = rgb_to_hex(next(icolors))
-            _ = new_sub_element(
-                masked,
-                "rect",
-                x=box_at_x,
-                y=box_at_y,
-                width=each_box_wide,
-                height=box_high,
-                fill=hex_color,
+        if len(block) == 1:
+            block_bbox = _bbox_copy(blocks_bbox, height=height)
+            if blocks:
+                block_bbox.y = blocks[-1].y2
+            blocks.append(block_bbox)
+        else:
+            block_a_bbox = _bbox_copy(
+                blocks_bbox, width=blocks_bbox.width / 2, height=height
             )
-            box_at_x += each_box_wide + _PALETTE_GAP
-        box_at_y += box_high + _PALETTE_GAP
+            if blocks:
+                block_a_bbox.y = blocks[-1].y2
+            block_b_bbox = _bbox_copy(block_a_bbox)
+            block_b_bbox.x = block_a_bbox.x2
+            blocks.append(block_a_bbox)
+            blocks.append(block_b_bbox)
+
+    icolors = iter(palette_colors)
+    for block in (_padded_bbox(x, -hg) for x in blocks):
+        hex_color = rgb_to_hex(next(icolors))
+        _ = new_sub_element(masked, "rect", **_bbox_dict(block), fill=hex_color)
 
     masked.set("clip-path", "url(#color_bar_clip)")
 
-    write_svg("temp2.svg", screen)
+    # write_svg("temp2.svg", screen)
     # TODO: return full colstr
     # colstr = get_colors_string(palette_colors + accent_colors)
     aaa = os.listdir(Path(outfile).parent)
@@ -336,7 +424,7 @@ show_svg(
     BINARIES / "pencils.jpg",
     [(25, 25, 25), (0, 0, 0), (255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0)],
     BINARIES / "output.svg",
-    [1, 1, 1, 1, 1, 1],
+    [3, 1, 3, 1, 1, 1],
     (0, 0, 0, 0),
     "Pencils",
 )
