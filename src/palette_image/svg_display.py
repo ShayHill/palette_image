@@ -19,7 +19,7 @@ from typing import Iterable, Sequence
 from basic_colormath import rgb_to_hex
 from lxml import etree
 from lxml.etree import _Element as EtreeElement  # type: ignore
-from PIL import Image, ImageOps
+from PIL import Image
 from PIL.Image import Image as ImageType
 from svg_ultralight import NSMAP, new_svg_root, write_png, write_svg
 from svg_ultralight.constructors import new_sub_element
@@ -30,41 +30,17 @@ from palette_image.type_bbox import Bbox
 
 _RGB = tuple[float, float, float]
 
-# overall scalar. This scales the pixel width of the output images. That value could
-# also be changed by setting "print_width" and "print_height" in the svg root
-# element, but this is what I went with years before that functionality was
-# available. Also, there is no reason these must be ints. It is an artifact of a very
-# early bug in svg_ultralight that has since been fixed. Leaving it this way, because
-# I want to be able to re-render old images and keep them as close to the originals
-# as possible / preferable.
-_RESOLUTION = 100
-
-# ratio scalars. These also scale the output image to _RATIO[0] * _RESOLUTION by
-# _RATIO[1] * _RESOLUTION
+# width and height of output image
 _RATIO = (16, 9)
 
-# add a bit of transparent horizontal margin to the image. This was a naive fix for
-# how Twitter cut off the sides of my images. That cutting was a result of skewing my
-# image ratios by adding padding. The root of the problem is that terms like "pad"
-# and "margin" are hard to define when you are dealing with fixed geometry like SVG.
-# With svg_ultralight, padding is padding relative to the output image boundary, but
-# it's margin relative to the geometry of the SVG. For instance, a (0, 0, 1, 1)
-# rectangle, padded any amount will still be at (0, 0, 1, 1). Here, interpret margin
-# as page margin.
-_HORI_MARGIN_SCALE = 1 / 10
+# space to leave between palette colors
+_PALETTE_GAP = 1.5 / 20
 
-# relative space to leave between palette colors
-_PALETTE_GAP_SCALE = 1.5 / 20
+# width of thin white border around the image
+_PADDING = 1 / 15
 
-# padding (white boundary) around the image. This is *not* padding around the
-# geometry. There is no padding around the geometry, because I've filled it with a
-# white rounded-box element.
-_PADDING = max(1, _RESOLUTION / 15)
-
-
-# inferred values
-_ROOT_WIDE = _RATIO[0] * _RESOLUTION
-_ROOT_HIGH = _RATIO[1] * _RESOLUTION
+# radius of rounded corners
+_RECT_RADIUS = 1 / 4
 
 
 def _get_svg_embedded_image_str(image: ImageType) -> str:
@@ -127,6 +103,28 @@ def get_colors_string(colors: Iterable[tuple[float, float, float]]) -> str:
     return "-".join([rgb_to_hex(x)[1:] for x in colors])
     # return "-".join(f"{x:03n}" for x in color_values)
 
+def _fit_image(image: ImageType, bbox: Bbox) -> ImageType:
+    """Crop an image to the ratio of a bounding box.
+
+    :param image: PIL.Image instance
+    :param bbox: Bbox instance
+    :return: PIL.Image instance
+
+    This crops the image to the specified ratio. It's not a resize, so it will cut
+    off the top and bottom or the sides of the image to fit the ratio.
+    """
+    ratio = bbox.width / bbox.height
+    width, height = image.size
+    if width / height > ratio:
+        new_width = height * ratio
+        left = (width - new_width) / 2
+        right = width - left
+        return image.crop((left, 0, right, height))
+    new_height = width / ratio
+    top = (height - new_height) / 2
+    bottom = height - top
+    return image.crop((0, top, width, bottom))
+
 
 # TODO: this works but it's a mess
 def show_svg(
@@ -134,11 +132,9 @@ def show_svg(
     palette_colors: Sequence[_RGB],
     outfile: Path,
     dist: list[int],
-    crop: tuple[float, float, float, float],
-    comment: str,
-    # hori_margin_scale: float = _HORI_MARGIN_SCALE,
-    # palette_gap_scale: float = _PALETTE_GAP_SCALE,
-    # resolution: float = _RESOLUTION,
+    crop: tuple[float, float, float, float] = (0, 0, 0, 0),
+    comment: str = "",
+    print_width: float = 800,
 ) -> None:
     """
     The format for most of the palettes. Colors on top.
@@ -162,27 +158,24 @@ def show_svg(
     svg_doc = ""  # metaparameters.document_metaparameters()
     svg_doc += f"\n{outfile.stem}"
 
-    root_bbox = Bbox(0, 0, _ROOT_WIDE, _ROOT_HIGH)
+    root_bbox = Bbox(0, 0, _RATIO[0], _RATIO[1])
     content_bbox = root_bbox.pad(-_PADDING)
-    palette_gap = _PALETTE_GAP_SCALE * _RESOLUTION
+    palette_gap = _PALETTE_GAP
 
     # common case groups = [[1], [1], [1], [1], [1, 1]] will be squares.
     blocks_wide = (content_bbox.height - palette_gap * 4) / 5
 
-    # TODO: make global
-    mask_round = _RESOLUTION / 4
-
-    root = new_svg_root(*root_bbox.values, print_width_=root_bbox.width / 2)
+    root = new_svg_root(*root_bbox.values, print_width_=print_width)
     if comment:
         root.append(etree.Comment(comment))
 
     # thin white border around the image
-    root.append(root_bbox.get_rect(mask_round + _PADDING, fill = "white"))
+    root.append(root_bbox.get_rect(_RECT_RADIUS + _PADDING, fill = "white"))
 
     # palette rounded corners mask
     defs = new_sub_element(root, "defs")
     color_bar_clip = new_sub_element(defs, "clipPath", id="color_bar_clip")
-    color_bar_clip.append(content_bbox.get_rect(mask_round))
+    color_bar_clip.append(content_bbox.get_rect(_RECT_RADIUS))
 
     # image and color bar
     masked = new_sub_element(root, "g")
@@ -197,7 +190,8 @@ def show_svg(
     #     right = width * (1 - crop[2])
     #     bottom = height * (1 - crop[3])
     #     image = image.crop((left, top, right, bottom))
-    image = ImageOps.fit(image, (round(image_bbox.width), round(image_bbox.height)))
+    # image = ImageOps.fit(image, (round(image_bbox.width), round(image_bbox.height/10)))
+    image = _fit_image(image, image_bbox)
     svg_image = new_sub_element(
         masked,
         "image",
