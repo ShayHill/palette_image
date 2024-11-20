@@ -11,5 +11,8 @@ INKSCAPE_EXE = Path("C:/Program Files/Inkscape/bin/inkscape")
 _PROJECT = Path(__file__).parent.parent.parent
 
 BINARIES = _PROJECT / "binaries"
+RESOURCES = _PROJECT / "resources"
 
-BINARIES.mkdir(exist_ok=True)
+for path in (BINARIES, RESOURCES):
+    path.mkdir(exist_ok=True)
+
