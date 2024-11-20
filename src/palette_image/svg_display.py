@@ -12,27 +12,21 @@ import base64
 import io
 import os
 from pathlib import Path
-from typing import Sequence, Iterator
+from typing import Iterable, Sequence
 
+# import palette.metaparemeters as metaparameters
+# from palette.color_conversion import rgb_to_hex
+from basic_colormath import rgb_to_hex
 from lxml import etree
 from lxml.etree import _Element as EtreeElement  # type: ignore
 from PIL import Image, ImageOps
 from PIL.Image import Image as ImageType
 from svg_ultralight import NSMAP, new_svg_root, write_png, write_svg
 from svg_ultralight.constructors import new_sub_element
-from palette_image.type_bbox import Bbox
 
-from typing import Iterable
-
-from basic_colormath import rgb_to_hex
-
-
-# import palette.metaparemeters as metaparameters
-# from palette.color_conversion import rgb_to_hex
-from basic_colormath import rgb_to_hex
-
-from palette_image.globs import INKSCAPE_EXE, BINARIES
 from palette_image.color_block_ops import divvy_height, group_double_1s
+from palette_image.globs import BINARIES, INKSCAPE_EXE
+from palette_image.type_bbox import Bbox
 
 _RGB = tuple[float, float, float]
 
@@ -134,30 +128,6 @@ def get_colors_string(colors: Iterable[tuple[float, float, float]]) -> str:
     # return "-".join(f"{x:03n}" for x in color_values)
 
 
-def _pad_and_rad_rect_args(
-    x: float, y: float, width: float, height: float, *, pad: float = 0, rad: float = 0
-) -> dict[str, float]:
-    """Pad and rad arguments for an svg rectangle.
-
-    :param x: the x-coordinate of the rectangle
-    :param y: the y-coordinate of the rectangle
-    :param width: the width of the rectangle
-    :param height: the height of the rectangle
-    :param pad: the amount of padding to add to each side of the rectangle
-    :param rad: the corner radius of the rectangle
-    :return: a dictionary of the padded rectangle's coordinates
-    """
-    rect_args = {
-        "x": x - pad,
-        "y": y - pad,
-        "width": width + pad * 2,
-        "height": height + pad * 2,
-    }
-    if rad:
-        rect_args["rx"] = rect_args["ry"] = rad + pad
-    return rect_args
-
-
 # TODO: this works but it's a mess
 def show_svg(
     filename: Path | str,
@@ -196,32 +166,29 @@ def show_svg(
     content_bbox = root_bbox.pad(-_PADDING)
     palette_gap = _PALETTE_GAP_SCALE * _RESOLUTION
 
-    # ugly formula just de-parameterizes previous way of calculating box_wide from
-    # number of palette entries. box_wide is now fixed for any number of palette
-    # entries.
-    box_wide = (content_bbox.height - palette_gap * 4) / 5
+    # common case groups = [[1], [1], [1], [1], [1, 1]] will be squares.
+    blocks_wide = (content_bbox.height - palette_gap * 4) / 5
 
     # TODO: make global
     mask_round = _RESOLUTION / 4
 
-    screen = new_svg_root(*root_bbox.values, print_width_=root_bbox.width / 2)
+    root = new_svg_root(*root_bbox.values, print_width_=root_bbox.width / 2)
     if comment:
-        screen.append(etree.Comment(comment))
+        root.append(etree.Comment(comment))
 
-    # white background behind entire image
-    rgeo = _pad_and_rad_rect_args(*root_bbox.values, rad=mask_round + _PADDING)
-    _ = new_sub_element(screen, "rect", **rgeo, fill="white")
+    # thin white border around the image
+    root.append(root_bbox.get_rect(mask_round + _PADDING, fill = "white"))
 
     # palette rounded corners mask
-    defs = new_sub_element(screen, "defs")
+    defs = new_sub_element(root, "defs")
     color_bar_clip = new_sub_element(defs, "clipPath", id="color_bar_clip")
-    rgeo = _pad_and_rad_rect_args(**content_bbox.dict, rad=mask_round)
-    _ = new_sub_element(color_bar_clip, "rect", **rgeo)
+    color_bar_clip.append(content_bbox.get_rect(mask_round))
 
-    masked = new_sub_element(screen, "g")
+    # image and color bar
+    masked = new_sub_element(root, "g")
 
     # image
-    image_bbox = content_bbox.pad((0, -(palette_gap + box_wide), 0, 0))
+    image_bbox = content_bbox.pad((0, -(palette_gap + blocks_wide), 0, 0))
     image = Image.open(filename)
     # if crop:  # := crops.get(os.path.basename(filename)):
     #     width, height = image.size
@@ -243,15 +210,12 @@ def show_svg(
         etree.QName(NSMAP["xlink"], "href"), _get_svg_embedded_image_str(image)
     )
 
-    # palette
-    # palette_gap = round(_PALETTE_GAP_SCALE * _RESOLUTION)
-
     # -------------------------------------------------------------------------
     # color blocks
     # -------------------------------------------------------------------------
 
     # todo: make this a cut
-    blocks_bbox = content_bbox.pad((0, 0, 0, -(image_bbox.width + palette_gap)))
+    blocks_bbox = content_bbox.reset_lims(x = image_bbox.x2 + palette_gap)
     blocks_bbox = blocks_bbox.pad(palette_gap / 2)
 
     hori_groups = group_double_1s(dist)
@@ -276,7 +240,7 @@ def show_svg(
     icolors = iter(palette_colors)
     for block in (x.pad(-palette_gap / 2) for x in blocks):
         hex_color = rgb_to_hex(next(icolors))
-        _ = new_sub_element(masked, "rect", **block.dict, fill=hex_color)
+        _ = new_sub_element(masked, "rect", **block.as_dict, fill=hex_color)
 
     masked.set("clip-path", "url(#color_bar_clip)")
 
@@ -288,8 +252,8 @@ def show_svg(
     # return
     # full_name = outfile[:-4] + "_" + colstr + outfile[-4:]
     outfile = Path(outfile)
-    write_svg(outfile.with_suffix(".svg"), screen)
-    write_png(INKSCAPE_EXE, outfile, screen)
+    write_svg(outfile.with_suffix(".svg"), root)
+    write_png(INKSCAPE_EXE, outfile, root)
 
 
 show_svg(

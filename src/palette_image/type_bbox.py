@@ -18,6 +18,8 @@ copies of itself with non-matrix transformations.
 
 from svg_ultralight import BoundingBox
 from typing import Self
+from lxml.etree import _Element as EtreeElement  # type: ignore
+from svg_ultralight.constructors import new_element
 
 def _expand_pad(pad: float | tuple[float, ...]) -> tuple[float, float, float, float]:
     """Expand a pad argument into a 4-tuple."""
@@ -39,15 +41,28 @@ class Bbox(BoundingBox):
     """
 
     @property
-    def dict(self) -> dict[str, float]:
+    def as_dict(self) -> dict[str, float]:
         """Return the dimensions of a bounding box."""
         return {"x": self.x, "y": self.y, "width": self.width, "height": self.height}
 
     @property
     def values(self) -> tuple[float, float, float, float]:
         """Return the dimensions of a bounding box."""
-        x, y, width, height = self.dict.values()
+        x, y, width, height = self.as_dict.values()
         return x, y, width, height
+
+    def get_rect_args(self, rad: float, fill: str = "") -> dict[str, float]:
+        """Return the arguments for drawing a rectangle."""
+        if rad == 0:
+            return self.as_dict
+        return {**self.as_dict, "rx": rad, "ry": rad}
+
+    def get_rect(self, rad: float = 0, fill: str = "") -> EtreeElement:
+        """Return an svg rectangle element."""
+        rect_args = self.as_dict
+        if rad:
+            rect_args.update({"rx": rad, "ry": rad})
+        return new_element("rect", **rect_args, fill=fill)
 
     def reset_dims(
         self, *, width: float | None = None, height: float | None = None
@@ -62,8 +77,8 @@ class Bbox(BoundingBox):
         *,
         x: float | None = None,
         y: float | None = None,
-        x2: float | None,
-        y2: float | None,
+        x2: float | None = None,
+        y2: float | None = None,
     ) -> Self:
         """Return a new bounding box with updated limits."""
         x = self.x if x is None else x
