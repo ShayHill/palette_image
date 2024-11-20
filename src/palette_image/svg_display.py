@@ -32,6 +32,7 @@ from basic_colormath import rgb_to_hex
 from basic_colormath import rgb_to_hex
 
 from palette_image.globs import INKSCAPE_EXE, BINARIES
+from palette_image.color_block_ops import divvy_height, group_double_1s
 
 _RGB = tuple[float, float, float]
 
@@ -157,96 +158,6 @@ def _pad_and_rad_rect_args(
     return rect_args
 
 
-def _group_double_1s(slices: list[int]) -> list[list[int]]:
-    """Working from the end of a list, group any two consecutive 1s
-
-    :param slices: a list of integers
-    :return: a list of lists of integers, where each list is a single integer or [1, 1]
-
-    Given a list of integers, when 1, 1 appears, group them together as [1, 1]. Group
-    other values as singles.
-
-        >>> _group_double_1s([1, 2, 3, 4, 1, 1])
-        [[1], [2], [3], [4], [1, 1]]
-    """
-    groups: list[list[int]] = []
-    for i in reversed(slices):
-        if any(len(x) > 1 for x in groups):
-            groups.append([i])
-            continue
-        if i == 1 and groups and groups[-1] == [1]:
-            groups[-1].append(1)
-        else:
-            groups.append([i])
-    return list(reversed(groups))
-
-
-# class Geo:
-# @property
-
-
-def is_single(group: list[int]) -> bool:
-    return group == [1]
-
-
-def is_double(group: list[int]) -> bool:
-    return group == [1, 1]
-
-
-def divvy_height(
-    bbox: Bbox,
-    groups: list[list[int]],
-    _lock_singles: bool = True,
-    _lock_doubles: bool = True,
-) -> list[float]:
-    """Divide a height into segments based on vertical groupings.
-
-    :param bbox: the bounding box to divide vertically
-    :param groups: a list of horizontal groupings. The output of _group_double_1s
-
-    # don't use these. For recursion only
-    :param _lock_singles: whether to lock [1] groups to a specific height
-    :param _lock_doubles: whether to lock [1, 1] groups to a specific height
-
-    :return: a list of heights
-
-    _group_double_1s will group consecutive 1s in a dist into a double. This mimics
-    some of the earlier palette images in my project. Possible returned values are
-    [[3], [4], [1, 1]], [[3], [4], [2], [1]], etc. Where possible, [1, 1], and [1]
-    are set to specific heights, whereas [2], [3], [4], [5], etc. are allowed to
-    stretch to fill the vertical space.
-
-    As of right now, _group_double_1s is intentionally restricted from producing any
-    grouping (like [[1], [1, 1]]) that would prevent locking all singles and doubles,
-    but I created this function to handle any conceivable grouping _group_double_1s
-    might produce in the future.
-
-    What _group_double_1s will never do (because nothing is implemented for this) is
-    create a group longer than 2 or a group of two with any values other than 1.
-    """
-    single_height = bbox.width / 2
-    double_height = bbox.width
-    heights: list[float | None] = [None] * len(groups)
-
-    def zip_hg() -> Iterator[tuple[float | None, list[int]]]:
-        return zip(heights, groups)
-
-    if _lock_singles:
-        heights = [single_height if is_single(g) else h for h, g in zip_hg()]
-    if _lock_doubles:
-        heights = [double_height if is_double(g) else h for h, g in zip_hg()]
-
-    if None not in heights:
-        # nothing to stretch - try (False, True) then (False, False)
-        return divvy_height(bbox, groups, False, _lock_singles)
-
-    free_height = bbox.height - sum(filter(None, heights))
-    per_slice = free_height / sum(sum(g) for h, g in zip_hg() if h is None)
-    heights = [h or sum(g) * per_slice for h, g in zip_hg()]
-
-    return list(filter(None, heights))
-
-
 # TODO: this works but it's a mess
 def show_svg(
     filename: Path | str,
@@ -343,7 +254,7 @@ def show_svg(
     blocks_bbox = content_bbox.pad((0, 0, 0, -(image_bbox.width + palette_gap)))
     blocks_bbox = blocks_bbox.pad(palette_gap / 2)
 
-    hori_groups = _group_double_1s(dist)
+    hori_groups = group_double_1s(dist)
     heights = divvy_height(blocks_bbox, hori_groups)
 
     blocks: list[Bbox] = []
