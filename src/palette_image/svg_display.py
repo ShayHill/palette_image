@@ -134,31 +134,16 @@ def get_colors_string(colors: Iterable[tuple[float, float, float]]) -> str:
     # return "-".join(f"{x:03n}" for x in color_values)
 
 
-def _expand_pad_argument(
-    pad: float | tuple[float, ...]
-) -> tuple[float, float, float, float]:
-    """Expand < 4 pad values to a 4-tuple (top, left, bottom, right).
-
-    :param pad: a float or a tuple of floats
-    :return: a 4-tuple of floats (top, left, bottom, right)
-    """
-    if not isinstance(pad, tuple):
-        return (pad, pad, pad, pad)
-    if len(pad) == 3:
-        return (pad[0], pad[1], pad[2], pad[1])
-    return (pad * 4)[:4]
-
-
-def _pad_rect(
+def _pad_and_rad_rect_args(
     x: float,
     y: float,
     width: float,
     height: float,
     *,
-    pad: float | tuple[float, ...] = 0,
+    pad: float = 0,
     rad: float = 0,
 ) -> dict[str, float]:
-    """Pad a rectangle by a given amount
+    """Pad and rad arguments for an svg rectangle.
 
     :param x: the x-coordinate of the rectangle
     :param y: the y-coordinate of the rectangle
@@ -168,12 +153,14 @@ def _pad_rect(
     :param rad: the corner radius of the rectangle
     :return: a dictionary of the padded rectangle's coordinates
     """
-    top, left, bottom, right = _expand_pad_argument(pad)
-    rect_args = dict(
-        x=x - left, y=y - top, width=width + left + right, height=height + top + bottom
-    )
+    rect_args = {
+        "x": x - pad,
+        "y": y - pad,
+        "width": width + pad * 2,
+        "height": height + pad * 2,
+    }
     if rad:
-        rect_args["rx"] = rect_args["ry"] = rad + min(top, left, bottom, right)
+        rect_args["rx"] = rect_args["ry"] = rad + pad
     return rect_args
 
 
@@ -253,13 +240,13 @@ def show_svg(
         screen.append(etree.Comment(comment))
 
     # white background behind entire image
-    rgeo = _pad_rect(_SHOW_X, 0, _SHOW_WIDE, _ROOT_HIGH, pad=_PADDING, rad=mask_round)
+    rgeo = _pad_and_rad_rect_args(_SHOW_X, 0, _SHOW_WIDE, _ROOT_HIGH, pad=_PADDING, rad=mask_round)
     _ = new_sub_element(screen, "rect", **rgeo, fill="white")
 
     # palette rounded corners mask
     defs = new_sub_element(screen, "defs")
     color_bar_clip = new_sub_element(defs, "clipPath", id="color_bar_clip")
-    rgeo = _pad_rect(_SHOW_X, 0, _SHOW_WIDE, _ROOT_HIGH, rad=mask_round)
+    rgeo = _pad_and_rad_rect_args(_SHOW_X, 0, _SHOW_WIDE, _ROOT_HIGH, rad=mask_round)
     _ = new_sub_element(color_bar_clip, "rect", **rgeo)
 
     masked = new_sub_element(screen, "g")
@@ -330,7 +317,6 @@ def show_svg(
             )
             box_at_x += each_box_wide + _PALETTE_GAP
         box_at_y += box_high + _PALETTE_GAP
-
 
     masked.set("clip-path", "url(#color_bar_clip)")
 
