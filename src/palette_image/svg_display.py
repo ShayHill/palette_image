@@ -8,15 +8,18 @@
 
 # padding reference: t, r, b, l
 
+import itertools as it
 import base64
 import io
 import os
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
+import svg_ultralight as su
 from basic_colormath import rgb_to_hex
 from lxml import etree
 from lxml.etree import _Element as EtreeElement  # type: ignore
+from typing import Iterator
 from PIL import Image
 from PIL.Image import Image as ImageType
 from svg_ultralight import NSMAP, new_svg_root, write_png, write_svg
@@ -94,10 +97,67 @@ def get_colors_string(colors: Iterable[tuple[float, float, float]]) -> str:
     This is to insert a full color description (18 consecutive 000 to 255 colors)
     into an output image filename.
     """
-    # breakpoint()
-    # color_values = sum([list(x) for x in colors], start=[])
     return "-".join([rgb_to_hex(x)[1:] for x in colors])
-    # return "-".join(f"{x:03n}" for x in color_values)
+
+
+def _new_palette_root(print_width: float) -> tuple[EtreeElement, su.BoundElement]:
+    """Return a new svg root and the content bounding box.
+
+    :return: root, content area as a BoundElement
+
+    """
+    bbox = Bbox(0, 0, *RATIO)
+    root = su.new_svg_root_around_bounds(bbox, print_width_=print_width)
+    content_bbox = su.pad_bbox(bbox, -PADDING)
+
+    defs = su.new_sub_element(root, "defs")
+    clip_path = new_sub_element(defs, "clipPath", id=_CLIP_PATH_ID)
+    rad = CORNER_RAD + PADDING
+    clip_path.append(su.new_bbox_rect(content_bbox, rx=rad, ry=rad))
+
+    content_elem = new_sub_element(root, "g", clip_path=f"url(#{_CLIP_PATH_ID})")
+    return root, su.BoundElement(content_elem, content_bbox)
+
+
+def _split_content_into_image_and_blocks(
+    content_bbox: su.BoundingBox,
+) -> tuple[su.BoundingBox, su.BoundingBox]:
+    """Return the bounding boxes for the image and the color blocks.
+
+    :param content_bbox: the bounding box of the content area
+    :return: image bbox, blocks bbox
+
+    """
+    # set 5 block stack to be squares
+    blocks_wide = (content_bbox.height - PALETTE_GAP * 4) / 5
+    blocks_bbox = su.cut_bbox(content_bbox, x=content_bbox.x2 - blocks_wide)
+    image_bbox = su.cut_bbox(content_bbox, x2=blocks_bbox.x - PALETTE_GAP)
+    return image_bbox, blocks_bbox
+
+
+def _new_image_in_bbox(
+    filename: Path | str, bbox: su.BoundingBox, center: tuple[float, float] | None
+) -> EtreeElement:
+    image = fit_image_to_bbox_ratio(Image.open(filename), bbox, center)
+    svg_image = su.new_element("image", **su.bbox_dict(bbox))
+    svg_image.set(
+        etree.QName(NSMAP["xlink"], "href"), _get_svg_embedded_image_str(image)
+    )
+    return svg_image
+
+
+def _position_blocks(bbox: su.BoundingBox, dist: list[int]) -> Iterator[su.BoundingBox]:
+    """Yield a BoundingBox for each block in the palette."""
+    groups = group_double_1s(dist)
+    heights = divvy_height(bbox, groups)
+
+    at_y = bbox.y
+    for group, height in zip(groups, heights):
+        at_x = bbox.x
+        for width in (bbox.width * g / len(group) for g in group):
+            yield su.BoundingBox(at_x, at_y, width, height)
+            at_x += width
+        at_y += height
 
 
 def show_svg(
@@ -120,74 +180,22 @@ def show_svg(
     svg_doc = ""  # metaparameters.document_metaparameters()
     svg_doc += f"{outfile.stem}"
 
-    root_bbox = Bbox(0, 0, RATIO[0], RATIO[1])
-    content_bbox = root_bbox.pad(-PADDING)
+    root, content = _new_palette_root(print_width)
+    image_bbox, blocks_bbox = _split_content_into_image_and_blocks(content.bbox)
 
-    # common case groups = [[1], [1], [1], [1], [1, 1]] will be squares.
-    blocks_wide = (content_bbox.height - PALETTE_GAP * 4) / 5
+    content.elem.append(_new_image_in_bbox(filename, image_bbox, center))
 
-    root = new_svg_root(*root_bbox.values, print_width_=print_width)
-    if comment:
-        root.addprevious(etree.Comment(f"{svg_doc}\n{comment}"))
-
-    # thin white border around the image
-    root.append(root_bbox.get_rect(CORNER_RAD + PADDING, fill="white"))
-
-    # palette rounded corners mask
-    defs = new_sub_element(root, "defs")
-    color_bar_clip = new_sub_element(defs, "clipPath", id=_CLIP_PATH_ID)
-    color_bar_clip.append(content_bbox.get_rect(CORNER_RAD))
-
-    # image and color bar
-    masked = new_sub_element(root, "g")
-
-    # image
-    image_bbox = content_bbox.pad((0, -(PALETTE_GAP + blocks_wide), 0, 0))
-    image = fit_image_to_bbox_ratio(Image.open(filename), image_bbox, center)
-    svg_image = new_sub_element(masked, "image", **image_bbox.as_dict)
-    svg_image.set(
-        etree.QName(NSMAP["xlink"], "href"), _get_svg_embedded_image_str(image)
-    )
-
-    # -------------------------------------------------------------------------
-    # color blocks
-    # -------------------------------------------------------------------------
-
-    blocks_bbox = content_bbox.reset_lims(x=image_bbox.x2 + PALETTE_GAP)
-    blocks_bbox = blocks_bbox.pad(PALETTE_GAP / 2)
-
-    hori_groups = group_double_1s(dist)
-    heights = divvy_height(blocks_bbox, hori_groups)
-
-    blocks: list[Bbox] = []
-    for height, block in zip(heights, hori_groups, strict=True):
-        if len(block) == 1:
-            block_bbox = blocks_bbox.reset_dims(height=height)
-            if blocks:
-                block_bbox.y = blocks[-1].y2
-            blocks.append(block_bbox)
-        else:
-            width = blocks_bbox.width / 2
-            block_a_bbox = blocks_bbox.reset_dims(width=width, height=height)
-            if blocks:
-                block_a_bbox.y = blocks[-1].y2
-            block_b_bbox = block_a_bbox.copy()
-            block_b_bbox.x = block_a_bbox.x2
-            blocks += [block_a_bbox, block_b_bbox]
+    # Pad out the blocks then cut them up without dealing with gaps. Remove this
+    # padding later to get PALETTE_GAP
+    blocks_bbox = su.pad_bbox(blocks_bbox, PALETTE_GAP / 2)
 
     icolors = iter(palette_colors)
-    for block in (x.pad(-PALETTE_GAP / 2) for x in blocks):
-        hex_color = rgb_to_hex(next(icolors))
-        _ = new_sub_element(masked, "rect", **block.as_dict, fill=hex_color)
+    block_bboxes = _position_blocks(blocks_bbox, dist)
+    block_colors = map(rgb_to_hex, icolors)
+    for block, color in zip(block_bboxes, block_colors):
+        block = su.pad_bbox(block, -PALETTE_GAP / 2)
+        content.elem.append(su.new_bbox_rect(block, fill=color))
 
-    masked.set("clip-path", f"url(#{_CLIP_PATH_ID})")
-
-    # write_svg("temp2.svg", screen)
-    # colstr = get_colors_string(palette_colors + accent_colors)
-    # aaa = os.listdir(Path(outfile).parent)
-    # if any(colstr in x for x in aaa):
-    # return
-    # full_name = outfile[:-4] + "_" + colstr + outfile[-4:]
     outfile = Path(outfile)
     write_svg(outfile.with_suffix(".svg"), root)
     write_png(INKSCAPE_EXE, outfile, root)

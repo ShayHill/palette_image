@@ -17,6 +17,7 @@ copies of itself with non-matrix transformations.
 """
 
 from typing import Self
+import svg_ultralight as su
 
 from lxml.etree import _Element as EtreeElement  # type: ignore
 from PIL.Image import Image as ImageType
@@ -127,7 +128,7 @@ def _symmetric_crop(
 
 
 def fit_image_to_bbox_ratio(
-    image: ImageType, bbox: Bbox, center: tuple[float, float] | None = None
+    image: ImageType, bbox: su.BoundingBox, center: tuple[float, float] | None = None
 ) -> ImageType:
     """Crop an image to the ratio of a bounding box.
 

@@ -23,8 +23,9 @@ attempting to keep all dist=1 to the same height. Where possible, only dist valu
 
 from collections.abc import Iterator
 
+import svg_ultralight as su
 from palette_image.type_bbox import Bbox
-
+from typing import Sequence
 
 def group_double_1s(slices: list[int]) -> list[list[int]]:
     """Working from the end of a list, group first two consecutive 1s.
@@ -64,22 +65,24 @@ def _is_double(group: list[int]) -> bool:
 
 
 def divvy_height(
-    bbox: Bbox,
+    bbox: su.BoundingBox,
     groups: list[list[int]],
     *,
-    _lock_singles: bool = True,
-    _lock_doubles: bool = True,
+    locks: Sequence[tuple[list[int], float]] | None = None,
 ) -> list[float]:
     """Divide a height into segments based on vertical groupings.
 
     :param bbox: the bounding box to divide vertically
     :param groups: a list of horizontal groupings. The output of _group_double_1s
+    :param locks: a list of tuples. Each tuple is a group and a height. For any g, h
+        in locks, the height of g will be set to h. If None, the default is to set
+        [1] to half the width and [1, 1] to the full width. List locks in order of
+        priority, starting with the highest priority. If all groups are locked, there
+        won't be any groups to scale to fill the bbox height, so divvy_height will
+        remove locks from the right of the lock sequence until scalable groups are
+        found.
 
-    # don't use these. For recursion only
-    :param _lock_singles: whether to lock [1] groups to a specific height
-    :param _lock_doubles: whether to lock [1, 1] groups to a specific height
-
-    :return: a list of heights
+    :return: a list of heights summing to bbox.height
 
     _group_double_1s will group consecutive 1s in a dist into a double. This mimics
     some of the earlier palette images in my project. Possible returned values are
@@ -95,26 +98,33 @@ def divvy_height(
     What _group_double_1s will never do (because nothing is implemented for this) is
     create a group longer than 2 or a group of two with any values other than 1.
     """
-    single_height = bbox.width / 2
-    double_height = bbox.width
+    if not groups:
+        msg = "No groups to divvy in divvy_height."
+        raise ValueError(msg)
+    if locks is None:
+        single_height = bbox.width / 2
+        double_height = bbox.width
+        locks = [([1, 1], double_height), ([1], single_height)]
+
     heights: list[float | None] = [None] * len(groups)
 
     def zip_hg() -> Iterator[tuple[float | None, list[int]]]:
         return zip(heights, groups, strict=True)
 
-    if _lock_singles:
-        heights = [single_height if _is_single(g) else h for h, g in zip_hg()]
-    if _lock_doubles:
-        heights = [double_height if _is_double(g) else h for h, g in zip_hg()]
+    for lock in locks:
+        heights = [lock[1] if g == lock[0] else h for h, g in zip_hg()]
 
     if None not in heights:
-        # nothing to stretch - try (False, True) then (False, False)
-        return divvy_height(
-            bbox, groups, _lock_singles=False, _lock_doubles=_lock_singles
-        )
+        if not locks:
+            msg = "Failed to find scalable groups in divvy_height."
+            raise RuntimeError(msg)
+        return divvy_height(bbox, groups, locks = locks[:-1])
 
     free_height = bbox.height - sum(filter(None, heights))
-    per_slice = free_height / sum(sum(g) for h, g in zip_hg() if h is None)
-    heights = [h or sum(g) * per_slice for h, g in zip_hg()]
+    free_slices = [sum(g) for h, g in zip_hg() if h is None]
+    scale = free_height / sum(free_slices)
+    for i, height in enumerate(heights):
+        heights[i] = height if height is not None else free_slices.pop(0) * scale
 
+    assert None not in heights
     return list(filter(None, heights))
