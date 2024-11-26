@@ -25,7 +25,7 @@ from svg_ultralight.constructors import new_sub_element
 
 from palette_image.color_block_ops import divvy_height, group_double_1s
 from palette_image.globs import BINARIES, INKSCAPE_EXE
-from palette_image.type_bbox import Bbox, fit_image_to_bbox_ratio
+from palette_image.crop_image import crop_image_to_bbox_ratio
 
 # internal unit size of the svg
 RATIO = (16, 9)
@@ -185,7 +185,7 @@ def _split_content_into_image_and_blocks(
 def _new_image_in_bbox(
     filename: Path | str, bbox: su.BoundingBox, center: tuple[float, float] | None
 ) -> EtreeElement:
-    image = fit_image_to_bbox_ratio(Image.open(filename), bbox, center)
+    image = crop_image_to_bbox_ratio(Image.open(filename), bbox, center)
     svg_image = su.new_element("image", **su.bbox_dict(bbox))
     svg_image.set(
         etree.QName(NSMAP["xlink"], "href"), _get_svg_embedded_image_str(image)

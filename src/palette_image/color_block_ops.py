@@ -24,7 +24,6 @@ attempting to keep all dist=1 to the same height. Where possible, only dist valu
 from collections.abc import Iterator
 
 import svg_ultralight as su
-from palette_image.type_bbox import Bbox
 from typing import Sequence
 
 def group_double_1s(slices: list[int]) -> list[list[int]]:
@@ -52,16 +51,6 @@ def group_double_1s(slices: list[int]) -> list[list[int]]:
         else:
             groups.append([i])
     return list(reversed(groups))
-
-
-def _is_single(group: list[int]) -> bool:
-    """Identify singles in divvy_height."""
-    return group == [1]
-
-
-def _is_double(group: list[int]) -> bool:
-    """Identify doubles in divvy_height."""
-    return group == [1, 1]
 
 
 def divvy_height(
