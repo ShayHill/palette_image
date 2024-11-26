@@ -8,21 +8,19 @@
 
 # padding reference: t, r, b, l
 
-import itertools as it
 import base64
 import io
-import os
 from collections.abc import Iterable, Sequence
 from pathlib import Path
+from typing import Iterator
 
 import svg_ultralight as su
 from basic_colormath import rgb_to_hex
 from lxml import etree
 from lxml.etree import _Element as EtreeElement  # type: ignore
-from typing import Iterator
 from PIL import Image
 from PIL.Image import Image as ImageType
-from svg_ultralight import NSMAP, new_svg_root, write_png, write_svg
+from svg_ultralight import NSMAP, write_png, write_svg
 from svg_ultralight.constructors import new_sub_element
 
 from palette_image.color_block_ops import divvy_height, group_double_1s
@@ -107,9 +105,10 @@ def flatten_meaningless_groups(elem: EtreeElement) -> None:
             elem.addprevious(child)
         parent.remove(elem)
 
+    children = tuple(elem)
     if elem.tag == "g" and not elem.attrib:
         promote_children(elem)
-    for child in elem:
+    for child in children:
         flatten_meaningless_groups(child)
 
 
@@ -125,15 +124,27 @@ def get_colors_string(colors: Iterable[tuple[float, float, float]]) -> str:
     return "-".join([rgb_to_hex(x)[1:] for x in colors])
 
 
+def _new_g(bbox: su.BoundingBox, **kwargs: float | str) -> su.BoundElement:
+    """Create an empty group element with a bounding box."""
+    return su.BoundElement(su.new_element("g", **kwargs), bbox)
+
+
+def _new_sub_g(
+    parent: su.BoundElement, bbox: su.BoundingBox, **kwargs: float | str
+) -> su.BoundElement:
+    """Create an empty group element with a bounding box."""
+    return su.BoundElement(su.new_sub_element(parent.elem, "g", **kwargs), bbox)
+
+
 def _new_palette_group() -> su.BoundElement:
     """Return a new svg root and the content bounding box.
 
     :return: root, content area as a BoundElement
-
     """
     scale = min(256 / x for x in RATIO)
     width, height = (x * scale for x in RATIO)
-    palette = su.BoundElement(su.new_element("g"), Bbox(0, 0, width, height))
+    palette = _new_g(su.BoundingBox(0, 0, width, height))
+
     rad = CORNER_RAD + PADDING
     palette.elem.append(su.new_bbox_rect(palette.bbox, rx=rad, ry=rad, fill="white"))
     return palette
@@ -145,12 +156,12 @@ def _add_masked_content(palette: su.BoundElement) -> su.BoundElement:
 
     defs = su.new_element("defs")
     palette.elem.insert(0, defs)
+
     clip_path = new_sub_element(defs, "clipPath", id=_CLIP_PATH_ID)
     rad = CORNER_RAD + PADDING
     clip_path.append(su.new_bbox_rect(content_bbox, rx=rad, ry=rad))
-    content_elem = su.new_element("g", clip_path=f"url(#{_CLIP_PATH_ID})")
-    palette.elem.append(content_elem)
-    return su.BoundElement(content_elem, content_bbox)
+
+    return _new_sub_g(palette, content_bbox, clip_path=f"url(#{_CLIP_PATH_ID})")
 
 
 def _split_content_into_image_and_blocks(
@@ -165,13 +176,9 @@ def _split_content_into_image_and_blocks(
     blocks_wide = (content.height - PALETTE_GAP * 4) / 5
     blocks_x = content.x2 - blocks_wide
     image_x2 = blocks_x - PALETTE_GAP
-
-    image_elem = su.new_sub_element(content.elem, "g")
-    blocks_elem = su.new_sub_element(content.elem, "g")
-
     return (
-        su.BoundElement(image_elem, su.cut_bbox(content, x2=image_x2)),
-        su.BoundElement(blocks_elem, su.cut_bbox(content, x=blocks_x)),
+        _new_sub_g(content, su.cut_bbox(content, x2=image_x2)),
+        _new_sub_g(content, su.cut_bbox(content, x=blocks_x)),
     )
 
 
@@ -203,7 +210,6 @@ def _position_blocks(bbox: su.BoundingBox, dist: list[int]) -> Iterator[su.Bound
 def new_palette_blem(
     filename: Path | str,
     palette_colors: Sequence[tuple[float, float, float]],
-    outfile: Path,
     dist: list[int],
     center: tuple[float, float] | None = None,
     comment: str = "",
@@ -216,11 +222,11 @@ def new_palette_blem(
     :param outfile:
     :return:
     """
-    svg_doc = ""  # metaparameters.document_metaparameters()
-    svg_doc += f"{outfile.stem}"
-
     palette = _new_palette_group()
     content = _add_masked_content(palette)
+
+    # defs was inserted at zero, so wait till here to insert comment
+    palette.elem.insert(0, etree.Comment(f"{Path(filename).stem}|{comment}"))
 
     image, blocks = _split_content_into_image_and_blocks(content)
 
@@ -249,7 +255,7 @@ def show_svg(
     comment: str = "",
     print_width: float = 800,
 ) -> None:
-    pal = new_palette_blem( filename, palette_colors, outfile, dist, center, comment )
+    pal = new_palette_blem(filename, palette_colors, dist, center, comment)
     root = su.new_svg_root_around_bounds(pal, print_width_=print_width)
     root.append(pal.elem)
     flatten_meaningless_groups(root)
