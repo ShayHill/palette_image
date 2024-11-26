@@ -32,16 +32,21 @@ from palette_image.type_bbox import Bbox, fit_image_to_bbox_ratio
 # internal unit size of the svg
 RATIO = (16, 9)
 
+# The ratios are scaled so that the larger dimension will be 256. This allows a nice
+# gradient for integer PALETTE_GAP, PADDING, and CORNER_RAD. This results in an
+# output svg with fewer decimal places for float arguments.
+
 # space to leave between palette colors
-PALETTE_GAP = 3 / 40
+PALETTE_GAP = 1.2
 
 # width of thin white border around the image
-PADDING = 1 / 15
+PADDING = 1
 
 # radius of rounded corners
-CORNER_RAD = 1 / 4
+CORNER_RAD = 4
 
-_CLIP_PATH_ID = "color_bar_clip"
+
+_CLIP_PATH_ID = "content_clip"
 
 
 def _get_svg_embedded_image_str(image: ImageType) -> str:
@@ -88,6 +93,26 @@ crops = {
 }
 
 
+def flatten_meaningless_groups(elem: EtreeElement) -> None:
+    """For any "g" element with an empty dict, move all items into the parent.
+
+    :param elem: the element to flatten
+    """
+
+    def promote_children(elem: EtreeElement) -> None:
+        parent = elem.getparent()
+        if parent is None:
+            return
+        for child in elem:
+            elem.addprevious(child)
+        parent.remove(elem)
+
+    if elem.tag == "g" and not elem.attrib:
+        promote_children(elem)
+    for child in elem:
+        flatten_meaningless_groups(child)
+
+
 def get_colors_string(colors: Iterable[tuple[float, float, float]]) -> str:
     """Return a formatted string of color-channel values
 
@@ -100,39 +125,54 @@ def get_colors_string(colors: Iterable[tuple[float, float, float]]) -> str:
     return "-".join([rgb_to_hex(x)[1:] for x in colors])
 
 
-def _new_palette_root(print_width: float) -> tuple[EtreeElement, su.BoundElement]:
+def _new_palette_group() -> su.BoundElement:
     """Return a new svg root and the content bounding box.
 
     :return: root, content area as a BoundElement
 
     """
-    bbox = Bbox(0, 0, *RATIO)
-    root = su.new_svg_root_around_bounds(bbox, print_width_=print_width)
-    content_bbox = su.pad_bbox(bbox, -PADDING)
+    scale = min(256 / x for x in RATIO)
+    width, height = (x * scale for x in RATIO)
+    palette = su.BoundElement(su.new_element("g"), Bbox(0, 0, width, height))
+    rad = CORNER_RAD + PADDING
+    palette.elem.append(su.new_bbox_rect(palette.bbox, rx=rad, ry=rad, fill="white"))
+    return palette
 
-    defs = su.new_sub_element(root, "defs")
+
+def _add_masked_content(palette: su.BoundElement) -> su.BoundElement:
+    """Add a masked content area to the palette."""
+    content_bbox = su.pad_bbox(palette.bbox, -PADDING)
+
+    defs = su.new_element("defs")
+    palette.elem.insert(0, defs)
     clip_path = new_sub_element(defs, "clipPath", id=_CLIP_PATH_ID)
     rad = CORNER_RAD + PADDING
     clip_path.append(su.new_bbox_rect(content_bbox, rx=rad, ry=rad))
-
-    content_elem = new_sub_element(root, "g", clip_path=f"url(#{_CLIP_PATH_ID})")
-    return root, su.BoundElement(content_elem, content_bbox)
+    content_elem = su.new_element("g", clip_path=f"url(#{_CLIP_PATH_ID})")
+    palette.elem.append(content_elem)
+    return su.BoundElement(content_elem, content_bbox)
 
 
 def _split_content_into_image_and_blocks(
-    content_bbox: su.BoundingBox,
-) -> tuple[su.BoundingBox, su.BoundingBox]:
-    """Return the bounding boxes for the image and the color blocks.
+    content: su.BoundElement,
+) -> tuple[su.BoundElement, su.BoundElement]:
+    """Return image and blocks group blems.
 
-    :param content_bbox: the bounding box of the content area
-    :return: image bbox, blocks bbox
-
+    :param content_bbox: the content area blem
+    :return: image blem, blocks blem
     """
     # set 5 block stack to be squares
-    blocks_wide = (content_bbox.height - PALETTE_GAP * 4) / 5
-    blocks_bbox = su.cut_bbox(content_bbox, x=content_bbox.x2 - blocks_wide)
-    image_bbox = su.cut_bbox(content_bbox, x2=blocks_bbox.x - PALETTE_GAP)
-    return image_bbox, blocks_bbox
+    blocks_wide = (content.height - PALETTE_GAP * 4) / 5
+    blocks_x = content.x2 - blocks_wide
+    image_x2 = blocks_x - PALETTE_GAP
+
+    image_elem = su.new_sub_element(content.elem, "g")
+    blocks_elem = su.new_sub_element(content.elem, "g")
+
+    return (
+        su.BoundElement(image_elem, su.cut_bbox(content, x2=image_x2)),
+        su.BoundElement(blocks_elem, su.cut_bbox(content, x=blocks_x)),
+    )
 
 
 def _new_image_in_bbox(
@@ -160,15 +200,14 @@ def _position_blocks(bbox: su.BoundingBox, dist: list[int]) -> Iterator[su.Bound
         at_y += height
 
 
-def show_svg(
+def new_palette_blem(
     filename: Path | str,
     palette_colors: Sequence[tuple[float, float, float]],
     outfile: Path,
     dist: list[int],
     center: tuple[float, float] | None = None,
     comment: str = "",
-    print_width: float = 800,
-) -> None:
+) -> su.BoundElement:
     """Create an svg with an image and a color bar.
 
     :param filename:
@@ -180,31 +219,54 @@ def show_svg(
     svg_doc = ""  # metaparameters.document_metaparameters()
     svg_doc += f"{outfile.stem}"
 
-    root, content = _new_palette_root(print_width)
-    image_bbox, blocks_bbox = _split_content_into_image_and_blocks(content.bbox)
+    palette = _new_palette_group()
+    content = _add_masked_content(palette)
 
-    content.elem.append(_new_image_in_bbox(filename, image_bbox, center))
+    image, blocks = _split_content_into_image_and_blocks(content)
+
+    image.elem.append(_new_image_in_bbox(filename, image.bbox, center))
 
     # Pad out the blocks then cut them up without dealing with gaps. Remove this
     # padding later to get PALETTE_GAP
-    blocks_bbox = su.pad_bbox(blocks_bbox, PALETTE_GAP / 2)
+    blocks_bbox = su.pad_bbox(blocks, PALETTE_GAP / 2)
 
     icolors = iter(palette_colors)
     block_bboxes = _position_blocks(blocks_bbox, dist)
     block_colors = map(rgb_to_hex, icolors)
     for block, color in zip(block_bboxes, block_colors):
         block = su.pad_bbox(block, -PALETTE_GAP / 2)
-        content.elem.append(su.new_bbox_rect(block, fill=color))
+        blocks.elem.append(su.new_bbox_rect(block, fill=color))
 
+    return palette
+
+
+def show_svg(
+    filename: Path | str,
+    palette_colors: Sequence[tuple[float, float, float]],
+    outfile: Path,
+    dist: list[int],
+    center: tuple[float, float] | None = None,
+    comment: str = "",
+    print_width: float = 800,
+) -> None:
+    pal = new_palette_blem( filename, palette_colors, outfile, dist, center, comment )
+    root = su.new_svg_root_around_bounds(pal, print_width_=print_width)
+    root.append(pal.elem)
+    flatten_meaningless_groups(root)
     outfile = Path(outfile)
-    write_svg(outfile.with_suffix(".svg"), root)
-    write_png(INKSCAPE_EXE, outfile, root)
+    _ = write_svg(outfile.with_suffix(".svg"), root)
+    _ = write_png(INKSCAPE_EXE, outfile, root)
 
 
-show_svg(
-    BINARIES / "pencils.jpg",
-    [(25, 25, 25), (0, 0, 0), (255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0)],
-    BINARIES / "output.svg",
-    [1, 1, 1, 1, 1, 1],
-    comment="Pencils",
-)
+def _main():
+    show_svg(
+        BINARIES / "pencils.jpg",
+        [(25, 25, 25), (0, 0, 0), (255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0)],
+        BINARIES / "output.svg",
+        [1, 1, 1, 1, 1, 1],
+        comment="Pencils",
+    )
+
+
+if __name__ == "__main__":
+    _main()
