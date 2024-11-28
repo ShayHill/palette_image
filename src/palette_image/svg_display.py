@@ -10,6 +10,8 @@
 
 import base64
 import io
+import json
+import os
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Iterator
@@ -24,8 +26,9 @@ from svg_ultralight import NSMAP, write_png, write_svg
 from svg_ultralight.constructors import new_sub_element
 
 from palette_image.color_block_ops import divvy_height, group_double_1s
-from palette_image.globs import BINARIES, INKSCAPE_EXE
 from palette_image.crop_image import crop_image_to_bbox_ratio
+from palette_image.globs import BINARIES, INKSCAPE_EXE
+
 
 # internal unit size of the svg
 RATIO = (16, 9)
@@ -45,6 +48,38 @@ CORNER_RAD = 4
 
 
 _CLIP_PATH_ID = "content_clip"
+
+
+def _serialize_palette_data(
+    filename: str | os.PathLike[str],
+    colors: Iterable[tuple[float, float, float]] | Iterable[str],
+    ratios: Iterable[float],
+    center: tuple[float, float] | None = None,
+    comment: str = "",
+) -> str:
+    """Serializar datos de paleta en una cadena json.
+
+    :param filename: ruta a la imaged de origen a partir de la cual se creó la paleta
+    :param colors: los colores utilizados en la paleta. Pueden ser cadenas
+        hexadecimales o tuplas RGB
+    :param ratios: la proporción de cada color en la paleta. No es necesario que
+        sumen uno.
+    :param center: el punto central de la imagen, si es relevante. Si no se da, la
+        imagen se recortará  alredador del centro verdadero.
+    :param comment: un comentario opcional para la paleta. Esto se puede utilizar
+        para anotar los detalles del algoritmo utilizado para generar la paleta.
+    :return: una cadena json que contiene los datos de la paleta
+
+    Esta información se puede utilizar para recrear la paleta en el futuro.
+    """
+    palette_data = dict(
+        filename=Path(filename).name,
+        colors=[x if isinstance(x, str) else rgb_to_hex(x) for x in colors],
+        ratios=list(ratios),
+        center=center,
+        comment=comment,
+    )
+    return json.dumps(palette_data)
 
 
 def _get_svg_embedded_image_str(image: ImageType) -> str:
@@ -158,7 +193,7 @@ def _add_masked_content(palette: su.BoundElement) -> su.BoundElement:
     palette.elem.insert(0, defs)
 
     clip_path = new_sub_element(defs, "clipPath", id=_CLIP_PATH_ID)
-    rad = CORNER_RAD + PADDING
+    rad = CORNER_RAD
     clip_path.append(su.new_bbox_rect(content_bbox, rx=rad, ry=rad))
 
     return _new_sub_g(palette, content_bbox, clip_path=f"url(#{_CLIP_PATH_ID})")
@@ -217,16 +252,20 @@ def new_palette_blem(
     """Create an svg with an image and a color bar.
 
     :param filename:
+    # TODO: fix new_palette_blem docstring
     :param palette_colors:
     :param accent_colors:
     :param outfile:
     :return:
     """
+    comment = _serialize_palette_data(filename, palette_colors, dist, center, comment)
     palette = _new_palette_group()
     content = _add_masked_content(palette)
 
+    comment = _serialize_palette_data(filename, palette_colors, dist, center, comment)
+
     # defs was inserted at zero, so wait till here to insert comment
-    palette.elem.insert(0, etree.Comment(f"{Path(filename).stem}|{comment}"))
+    palette.elem.insert(0, etree.Comment(comment))
 
     image, blocks = _split_content_into_image_and_blocks(content)
 
