@@ -31,23 +31,19 @@ from palette_image.globs import BINARIES, INKSCAPE_EXE
 
 
 # internal unit size of the svg
-RATIO = (16, 9)
-
-# The ratios are scaled so that the larger dimension will be 256. This allows a nice
-# gradient for integer PALETTE_GAP, PADDING, and CORNER_RAD. This results in an
-# output svg with fewer decimal places for float arguments.
+SIZE = (256, 144)  # 16:9
 
 # space to leave between palette colors
 PALETTE_GAP = 1.2
 
 # width of thin white border around the image
-PADDING = 1
+_PAD = 1
 
 # radius of rounded corners
-CORNER_RAD = 4
+_RAD = 4
 
 
-_CLIP_PATH_ID = "content_clip"
+_CLIP_ID = "content_clip"
 
 
 def _serialize_palette_data(
@@ -126,27 +122,6 @@ crops = {
 }
 
 
-def flatten_meaningless_groups(elem: EtreeElement) -> None:
-    """For any "g" element with an empty dict, move all items into the parent.
-
-    :param elem: the element to flatten
-    """
-
-    def promote_children(elem: EtreeElement) -> None:
-        parent = elem.getparent()
-        if parent is None:
-            return
-        for child in elem:
-            elem.addprevious(child)
-        parent.remove(elem)
-
-    children = tuple(elem)
-    if elem.tag == "g" and not elem.attrib:
-        promote_children(elem)
-    for child in children:
-        flatten_meaningless_groups(child)
-
-
 def get_colors_string(colors: Iterable[tuple[float, float, float]]) -> str:
     """Return a formatted string of color-channel values
 
@@ -171,49 +146,51 @@ def _new_sub_g(
     return su.BoundElement(su.new_sub_element(parent.elem, "g", **kwargs), bbox)
 
 
-def _new_palette_group() -> su.BoundElement:
-    """Return a new svg root and the content bounding box.
+def _new_palette_group(comment: str) -> su.BoundElement:
+    """Return a new bound "g" element with a comment string and white background.
 
-    :return: root, content area as a BoundElement
+    :param comment: a comment to insert into the svg
+    :return: a new bound "g" element
     """
-    scale = min(256 / x for x in RATIO)
-    width, height = (x * scale for x in RATIO)
-    palette = _new_g(su.BoundingBox(0, 0, width, height))
-
-    rad = CORNER_RAD + PADDING
-    palette.elem.append(su.new_bbox_rect(palette.bbox, rx=rad, ry=rad, fill="white"))
+    palette = su.BoundElement(su.new_element("g"), su.BoundingBox(0, 0, *SIZE))
+    palette.elem.append(etree.Comment(comment))
+    rad = _RAD + _PAD
+    palette.elem.append(su.new_bbox_rect(palette.bbox, rx=rad, ry=rad, fill="gray"))
     return palette
 
 
 def _add_masked_content(palette: su.BoundElement) -> su.BoundElement:
     """Add a masked content area to the palette."""
-    content_bbox = su.pad_bbox(palette.bbox, -PADDING)
+    content_bbox = su.pad_bbox(palette.bbox, -_PAD)
 
-    defs = su.new_element("defs")
-    palette.elem.insert(0, defs)
+    defs = su.new_sub_element(palette.elem, "defs")
 
-    clip_path = new_sub_element(defs, "clipPath", id=_CLIP_PATH_ID)
-    rad = CORNER_RAD
-    clip_path.append(su.new_bbox_rect(content_bbox, rx=rad, ry=rad))
+    content_mask = new_sub_element(defs, "clipPath", id=_CLIP_ID)
+    rad = _RAD
+    content_mask.append(su.new_bbox_rect(content_bbox, rx=rad, ry=rad))
 
-    return _new_sub_g(palette, content_bbox, clip_path=f"url(#{_CLIP_PATH_ID})")
+    content_elem = su.new_sub_element(palette.elem, "g", clip_path=f"url(#{_CLIP_ID})")
+    return su.BoundElement(content_elem, content_bbox)
 
 
 def _split_content_into_image_and_blocks(
     content: su.BoundElement,
 ) -> tuple[su.BoundElement, su.BoundElement]:
-    """Return image and blocks group blems.
+    """Return image and blocks bound elements.
 
-    :param content_bbox: the content area blem
+    :param content: the content area blem
     :return: image blem, blocks blem
     """
-    # set 5 block stack to be squares
+    # set width so that 5-block-high stacks are made of squares
     blocks_wide = (content.height - PALETTE_GAP * 4) / 5
     blocks_x = content.x2 - blocks_wide
     image_x2 = blocks_x - PALETTE_GAP
+
+    image_bbox = su.cut_bbox(content, x2=image_x2)
+    blocks_bbox = su.cut_bbox(content, x=blocks_x)
     return (
-        _new_sub_g(content, su.cut_bbox(content, x2=image_x2)),
-        _new_sub_g(content, su.cut_bbox(content, x=blocks_x)),
+        su.BoundElement(content.elem, image_bbox),
+        su.BoundElement(content.elem, blocks_bbox),
     )
 
 
@@ -259,13 +236,8 @@ def new_palette_blem(
     :return:
     """
     comment = _serialize_palette_data(filename, palette_colors, dist, center, comment)
-    palette = _new_palette_group()
+    palette = _new_palette_group(comment)
     content = _add_masked_content(palette)
-
-    comment = _serialize_palette_data(filename, palette_colors, dist, center, comment)
-
-    # defs was inserted at zero, so wait till here to insert comment
-    palette.elem.insert(0, etree.Comment(comment))
 
     image, blocks = _split_content_into_image_and_blocks(content)
 
@@ -296,8 +268,7 @@ def show_svg(
 ) -> None:
     pal = new_palette_blem(filename, palette_colors, dist, center, comment)
     root = su.new_svg_root_around_bounds(pal, print_width_=print_width)
-    root.append(pal.elem)
-    flatten_meaningless_groups(root)
+    root.extend(pal.elem)
     outfile = Path(outfile)
     _ = write_svg(outfile.with_suffix(".svg"), root)
     _ = write_png(INKSCAPE_EXE, outfile, root)
