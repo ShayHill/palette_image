@@ -21,12 +21,12 @@ attempting to keep all dist=1 to the same height. Where possible, only dist valu
 :created: 2024-11-20
 """
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 
 import svg_ultralight as su
-from typing import Sequence
 
-def group_double_1s(slices: list[int]) -> list[list[int]]:
+
+def _group_double_1s(slices: list[int]) -> list[list[int]]:
     """Working from the end of a list, group first two consecutive 1s.
 
     :param slices: a list of integers
@@ -53,7 +53,7 @@ def group_double_1s(slices: list[int]) -> list[list[int]]:
     return list(reversed(groups))
 
 
-def divvy_height(
+def _divvy_height(
     bbox: su.BoundingBox,
     groups: list[list[int]],
     *,
@@ -107,7 +107,7 @@ def divvy_height(
         if not locks:
             msg = "Failed to find scalable groups in divvy_height."
             raise RuntimeError(msg)
-        return divvy_height(bbox, groups, locks = locks[:-1])
+        return _divvy_height(bbox, groups, locks=locks[:-1])
 
     free_height = bbox.height - sum(filter(None, heights))
     free_slices = [sum(g) for h, g in zip_hg() if h is None]
@@ -115,5 +115,21 @@ def divvy_height(
     for i, height in enumerate(heights):
         heights[i] = height if height is not None else free_slices.pop(0) * scale
 
-    assert None not in heights
+    if None in heights:
+        msg = "Failed to fill bbox height in divvy_height."
+        raise RuntimeError(msg)
     return list(filter(None, heights))
+
+
+def position_blocks(bbox: su.BoundingBox, dist: list[int]) -> Iterator[su.BoundingBox]:
+    """Yield a BoundingBox for each block in the palette."""
+    groups = _group_double_1s(dist)
+    heights = _divvy_height(bbox, groups)
+
+    at_y = bbox.y
+    for group, height in zip(groups, heights, strict=True):
+        at_x = bbox.x
+        for width in (bbox.width * g / len(group) for g in group):
+            yield su.BoundingBox(at_x, at_y, width, height)
+            at_x += width
+        at_y += height
