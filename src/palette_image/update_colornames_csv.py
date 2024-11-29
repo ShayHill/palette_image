@@ -59,7 +59,7 @@ def _download_colornames_csv_to_resources() -> None:
     response = requests.get(_COLORNAMES_CSV_URL, timeout=10)
     if response.status_code == _REQUEST_SUCCESSFUL:
         with COLORNAMES_CSV.open("wb") as f:
-            _ = f.write(response.content)
+            _ = f.write(response.content.replace(b"\n", b"\r\n"))
         _ = sys.stdout.write(f"colornames.csv downloaded to {COLORNAMES_CSV}.\n")
     else:
         msg = f"Error: Unable to download colornames.csv - {response.status_code}"
