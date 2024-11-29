@@ -19,6 +19,7 @@ from lxml import etree
 from svg_ultralight import write_png, write_svg
 from svg_ultralight.constructors import new_sub_element
 
+
 from palette_image.color_block_ops import position_blocks
 from palette_image.globs import BINARIES, INKSCAPE_EXE
 from palette_image.image_ops import new_image_elem_in_bbox
