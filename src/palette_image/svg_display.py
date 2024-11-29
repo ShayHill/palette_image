@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Alternate (to ``show``) display library.
 
 :author: Shay Hill
@@ -19,8 +18,8 @@ from lxml import etree
 from svg_ultralight import write_png, write_svg
 from svg_ultralight.constructors import new_sub_element
 
-
 from palette_image.color_block_ops import position_blocks
+from palette_image.colornames import get_colornames
 from palette_image.globs import BINARIES, INKSCAPE_EXE
 from palette_image.image_ops import new_image_elem_in_bbox
 
@@ -62,11 +61,13 @@ def _serialize_palette_data(
 
     Esta información se puede utilizar para recrear la paleta en el futuro.
     """
+    hex_colors = [x if isinstance(x, str) else rgb_to_hex(x) for x in colors]
     palette_data = {
         "filename": Path(filename).name,
-        "colors": [x if isinstance(x, str) else rgb_to_hex(x) for x in colors],
+        "colors": hex_colors,
         "ratios": list(ratios),
         "center": center,
+        "colornames": get_colornames(*hex_colors),
         "comment": comment,
     }
     return json.dumps(palette_data)

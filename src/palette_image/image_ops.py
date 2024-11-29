@@ -10,7 +10,7 @@ from pathlib import Path
 
 import svg_ultralight as su
 from lxml import etree
-from lxml.etree import _Element as EtreeElement  # type: ignore
+from lxml.etree import _Element as EtreeElement  # pyright: ignore [reportPrivateUsage]
 from PIL import Image
 from PIL.Image import Image as ImageType
 from svg_ultralight import NSMAP

@@ -12,9 +12,10 @@ import functools as ft
 
 from basic_colormath import get_sqeuclidean, hex_to_rgb
 
-from palette_image import globs
+from palette_image import update_colornames_csv
+from palette_image.globs import COLORNAMES_CSV
 
-COLORNAMES = globs.RESOURCES / "colornames.csv"
+update_colornames_csv.update_colornames_csv()
 
 
 def _map_colornames() -> dict[tuple[float, float, float], str]:
@@ -22,7 +23,7 @@ def _map_colornames() -> dict[tuple[float, float, float], str]:
 
     :return: a dict[rgb_tuple, colorname]
     """
-    with COLORNAMES.open(encoding="utf-8") as namefile:
+    with COLORNAMES_CSV.open(encoding="utf-8") as namefile:
         _ = namefile.readline()  # skip header
         colornames = namefile.readlines()
     name_hex_tuples = (x.split(",") for x in colornames)
@@ -32,7 +33,7 @@ def _map_colornames() -> dict[tuple[float, float, float], str]:
 rgb2colorname = _map_colornames()
 
 
-def get_color_name(color: tuple[float, float, float] | str) -> str:
+def get_colorname(color: tuple[float, float, float] | str) -> str:
     """Get the closest (by Euclidean) color name for a given rgb.
 
     :param rgb: a color in rgb ([0, 255], [0, 255], [0, 255])
@@ -45,14 +46,10 @@ def get_color_name(color: tuple[float, float, float] | str) -> str:
     return rgb2colorname[best_color]
 
 
-def get_color_names_hex(palette_str: str) -> list[str]:
+def get_colornames(*colors: str | tuple[float, float, float]) -> list[str]:
     """From a string of palette rgb values, return a list of colors.
 
     :param palette_str: e.g., ffffff-123324-12ff22
     :return: one color name for every 16-bit hex value
     """
-    color_names: list[str] = []
-    for color in palette_str.split("-"):
-        col_name = get_color_name(color)
-        color_names.append(f"{col_name}: {color}")
-    return color_names
+    return [get_colorname(h) for h in colors]
