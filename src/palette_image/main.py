@@ -1,11 +1,8 @@
-"""Alternate (to ``show``) display library.
+"""Crear un svg con una imagen de origen y colores de palete proporcionandos.
 
 :author: Shay Hill
 :created: 12/2/2019
-
 """
-
-# padding reference: t, r, b, l
 
 import json
 import os
@@ -23,16 +20,16 @@ from palette_image.colornames import get_colornames
 from palette_image.globs import BINARIES, INKSCAPE_EXE
 from palette_image.image_ops import new_image_elem_in_bbox
 
-# internal unit size of the svg
+# tamaño de la *unit* interna del svg
 SIZE = (256, 144)  # 16:9
 
-# space to leave between palette colors
+# espacio para dejar entre la imagen y los bloques de color
 PALETTE_GAP = 1.2
 
-# width of thin white border around the image
+# ancho del borde blanco delgado alrededor de la imagen
 _PAD = 1
 
-# radius of rounded corners
+# radio de las esquinas redondeadas
 _RAD = 4
 
 
@@ -59,7 +56,8 @@ def _serialize_palette_data(
         para anotar los detalles del algoritmo utilizado para generar la paleta.
     :return: una cadena json que contiene los datos de la paleta
 
-    Esta información se puede utilizar para recrear la paleta en el futuro.
+    Esta información se puede utilizar para recrear la paleta en el futuro o crear un
+    texto accompanãmiento para la paleta.
     """
     hex_colors = [x if isinstance(x, str) else rgb_to_hex(x) for x in colors]
     palette_data = {
@@ -103,7 +101,7 @@ crops = {
 
 
 def _new_palette_group(comment: str) -> su.BoundElement:
-    """Return a new bound "g" element with a comment string and white background."""
+    """Devuelve un nuevo BoundElement "g" con un comentario y fondo blanco."""
     palette = su.BoundElement(su.new_element("g"), su.BoundingBox(0, 0, *SIZE))
     palette.elem.append(etree.Comment(comment))
     rad = _RAD + _PAD
@@ -112,7 +110,7 @@ def _new_palette_group(comment: str) -> su.BoundElement:
 
 
 def _add_masked_content(palette: su.BoundElement) -> su.BoundElement:
-    """Add a masked content area to the palette."""
+    """Añande un área de contenindo enmascaranda a la paleta."""
     content_bbox = su.pad_bbox(palette.bbox, -_PAD)
 
     defs = su.new_sub_element(palette.elem, "defs")
@@ -128,8 +126,10 @@ def _add_masked_content(palette: su.BoundElement) -> su.BoundElement:
 def _split_content_into_image_and_blocks(
     content: su.BoundElement,
 ) -> tuple[su.BoundElement, su.BoundElement]:
-    """Return image and blocks bound elements."""
-    # set width so that 5-block-high stacks are made of squares
+    """Devuelve BoundElements para la imagen y los bloques de color."""
+
+    # establecer el ancho para que las pilas de 5 bloques de altura estén hechas de
+    # cuadrados
     blocks_wide = (content.height - PALETTE_GAP * 4) / 5
     blocks_x = content.x2 - blocks_wide
     image_x2 = blocks_x - PALETTE_GAP
@@ -149,14 +149,14 @@ def new_palette_blem(
     center: tuple[float, float] | None = None,
     comment: str = "",
 ) -> su.BoundElement:
-    """Create an svg with an image and a color bar.
+    """Crear un svg con una imagen y una barra de color.
 
-    :param filename:
-    # TODO: fix new_palette_blem docstring
-    :param palette_colors:
-    :param accent_colors:
-    :param outfile:
-    :return:
+    :param filename: la ruta a la imagen de origen
+    :param palette_colors: los colores de la paleta
+    :param dist: la proporción de cada color en la paleta
+    :param center: el punto central de la imagen, se is necesario. Si no se da, el
+        verdadero centro se usará. Esto es para alterar el recorte de la imagen de
+        origen.
     """
     comment = _serialize_palette_data(filename, palette_colors, dist, center, comment)
     palette = _new_palette_group(comment)
@@ -166,8 +166,8 @@ def new_palette_blem(
 
     image.elem.append(new_image_elem_in_bbox(filename, image.bbox, center))
 
-    # Pad out the blocks then cut them up without dealing with gaps. Remove this
-    # padding later to get PALETTE_GAP
+    # Relennar los bloques y luego cortarlos sin lidiar con los espacios. Eliminar
+    # este relleno màs tarde para obtener PALETTE_GAP
     blocks_bbox = su.pad_bbox(blocks, PALETTE_GAP / 2)
 
     icolors = iter(palette_colors)
@@ -180,7 +180,7 @@ def new_palette_blem(
     return palette
 
 
-def show_svg(
+def write_palette(
     filename: Path | str,
     palette_colors: Sequence[tuple[float, float, float]],
     outfile: Path,
@@ -198,7 +198,7 @@ def show_svg(
 
 
 def _main():
-    show_svg(
+    write_palette(
         BINARIES / "pencils.jpg",
         [(25, 25, 25), (0, 0, 0), (255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0)],
         BINARIES / "output.svg",
