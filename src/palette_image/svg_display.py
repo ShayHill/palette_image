@@ -19,6 +19,7 @@ import json
 import os
 from collections.abc import Iterable, Sequence
 from pathlib import Path
+from typing import Sequence
 
 import svg_ultralight as su
 from basic_colormath import rgb_to_hex

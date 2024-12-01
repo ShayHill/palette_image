@@ -6,7 +6,14 @@ authors = [{ name = "Shay Hill", email = "shay_public@hotmail.com" }]
 license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = ["basic_colormath", "lxml", "pillow", "requests", "svg_ultralight"]
+dependencies = [
+"basic_colormath",
+"lxml",
+"pillow",
+"requests",
+"restricted_partition",
+"svg_ultralight"
+]
 
 [project.optional-dependencies]
 dev = ["commitizen", "pre-commit", "pytest", "types-lxml"]
