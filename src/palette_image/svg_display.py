@@ -1,5 +1,16 @@
 """Crear un svg con una imagen de origen y colores de palete proporcionandos.
 
+Esta imagen está destinada a ser el único resultado de un algoritmo de generación de
+paleta.  No hay un formato intermedio. Tengo un puñado de algoritmos de paleta, y
+este archivo svg es lo que se committed para capturar su salida. Para este propósito,
+no solo los colores de la paleta de salide y las proporciones pero también los
+nombres de los colores se incluirán como matadata en el archivo svg.
+
+Actualmente, todo lo que haco con estos archivos svg (i.e., el código necesario para
+mostrarlos en la web) es parte de este mismo proyecto, pero teóricamente estos
+archivos svg podrían ser consultados para construir otros tipos de visualizaciones
+fuera de este proyecto donde el buscador de nombres de colores no estaría disponible.
+
 :author: Shay Hill
 :created: 12/2/2019
 """
