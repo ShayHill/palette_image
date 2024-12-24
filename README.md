@@ -16,4 +16,3 @@ Cada una de las imàgenes contiene un cadena de commentario JSON con la siguient
 ```
 
 ... cuál debería ser suficiente información para crear la paleta en otro formato o crear una descripción de texto acompañante.
-
