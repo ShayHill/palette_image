@@ -12,24 +12,33 @@ color se asigna un número de esas rebanadas (mínimo 1).
 :created: 2024-11-30
 """
 
-from collections.abc import Sequence
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar
 
 from restricted_partition import iter_partition
-from typing import Sequence
 
-from typing import Iterator, Protocol, TypeVar
-
-_T = TypeVar("_T")
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Sequence
 
 
-class _WithLessThan(Protocol):
-    def __eq__(self: _T, __other: _T) -> bool: ...
+_T_contra = TypeVar("_T_contra", contravariant=True)
 
 
-_SortableT = TypeVar("_SortableT", bound=_WithLessThan)
+class SupportsDunderLT(Protocol[_T_contra]):
+    """Protocolo para objetos que soportan el operador de comparación "<"."""
+
+    def __lt__(self, other: _T_contra) -> bool:
+        """Devolver si self es menor que other."""
+        ...
 
 
-def _get_chi_squared(hypothesis: Sequence[float], observation: Sequence[float]):
+_SortableT = TypeVar("_SortableT", SupportsDunderLT[Any], float)
+
+
+def _get_chi_squared(
+    hypothesis: Sequence[float], observation: Sequence[float]
+) -> float:
     """Devolver el error entre dos listas de números de la misma longitud.
 
     :param hypothesis: la lista de números que se consideran la verdad
@@ -50,7 +59,9 @@ def _get_chi_squared(hypothesis: Sequence[float], observation: Sequence[float]):
     if 0 in hypothesis:
         msg = f"{hypothesis=} cannot contain 0"
         raise ValueError(msg)
-    return sum((obs - hyp) ** 2 / hyp for obs, hyp in zip(observation, hypothesis))
+    return sum(
+        (obs - hyp) ** 2 / hyp for obs, hyp in zip(observation, hypothesis, strict=True)
+    )
 
 
 def _sort_retain_order(items: list[_SortableT]) -> tuple[list[_SortableT], list[int]]:
@@ -60,10 +71,8 @@ def _sort_retain_order(items: list[_SortableT]) -> tuple[list[_SortableT], list[
     :return: una tupla con los elementos ordenados y una lista de índices que
         representan la permutación de los elementos originales
     """
-    items = list(items)
-    order = list(range(len(items)))
-    order.sort(key=lambda i: items[i])  # type: ignore
-    return [items[i] for i in order], order
+    itm_idx = sorted((x, i) for i, x in enumerate(items))
+    return [x[0] for x in itm_idx], [x[1] for x in itm_idx]
 
 
 def _get_restricted_partition(num_items: int, num_groups: int) -> Iterator[list[int]]:
