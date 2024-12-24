@@ -115,6 +115,8 @@ repos:
   # ISC003 Explicitly concatenated string should be implicitly concatenated
   rev: 'v0.8.4'
   hooks:
+    - id: ruff-format
+      name: "ruff-format"
     - id: ruff
       name: "ruff-lint"
       exclude: "tests"
@@ -126,8 +128,6 @@ repos:
       - --fixable=RUF022
     - id: ruff
       args: ["check", "--select", "I", "--fix"]
-    - id: ruff-format
-      name: "ruff-format"
 
 # reads pyproject.toml for additional config
 - repo: https://github.com/RobertCraigie/pyright-python
