@@ -37,6 +37,9 @@ profile = "black"
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules"
+pythonpath = ["tests"]
+log_cli = 1
+
 
 [tool.tox]
 legacy_tox_ini = """
@@ -48,6 +51,8 @@ deps = pytest
 commands = pytest
 """
 
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
 
 [tool.pyright]
 include = ["src"]
