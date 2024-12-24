@@ -21,9 +21,27 @@ dist valores > 1 serán estirados.
 :created: 2024-11-20
 """
 
-from collections.abc import Iterator, Sequence
+import dataclasses
+import itertools as it
+from collections.abc import Iterable, Iterator, Sequence
 
 import svg_ultralight as su
+from basic_colormath import rgb_to_hex
+
+from palette_image import geometry as geo
+from palette_image.colornames import get_colornames
+
+
+def color_to_hex(color: tuple[float, float, float] | str) -> str:
+    """Convertir un color a una cadena hexadecimal.
+
+    :param color: un color como una tupla RGB o una cadena hexadecimal con o sin el
+        signo "#"
+    :return: una cadena hexadecimal con el signo "#"
+    """
+    if isinstance(color, str):
+        return "#" + color.lstrip("#")
+    return rgb_to_hex(color)
 
 
 def _group_double_1s(slices: list[int]) -> list[list[int]]:
@@ -145,3 +163,85 @@ def position_blocks(bbox: su.BoundingBox, dist: list[int]) -> Iterator[su.Boundi
             yield su.BoundingBox(at_x, at_y, width, height)
             at_x += width
         at_y += height
+
+
+@dataclasses.dataclass
+class ColorBlocks:
+    """Todas información necesaria para crear los bloques de color.
+
+    :param colors: una lista de colores hexadecimales
+    :param heights: una lista de alturas *absolutas* para cada grupo de bloques de
+        color
+    :param groups: una lista de número de entradas de paleta en cada grupo
+
+    `heights` y `groups` deben tener la misma longitud.
+    `colors` debe tener longitud == `sum(groups)`.
+
+    Por ejemplo:
+
+    colors: ["#ff0000", "#00ff00", "#0000ff"]
+    heights: [10, 20]
+    groups: [2, 1]
+
+    Esta debería ser suficiente información para crear cualquier diseño de bloque de
+    paleta de proyectos de paleta anteriores.
+    """
+
+    colors: list[str]
+    heights: list[float]
+    groups: list[int]
+
+    @property
+    def names(self) -> list[str]:
+        """Devuelve una lista de nombres de colores."""
+        return get_colornames(*self.colors)
+
+    @property
+    def _bboxes(self) -> Iterator[su.BoundingBox]:
+        """Genera una BoundingBox para cada bloque de color."""
+        for i, group in enumerate(self.groups):
+            top = geo.blocks_bbox.y + sum(self.heights[:i])
+            bot = geo.blocks_bbox.y + sum(self.heights[: i + 1])
+            row_bbox = su.cut_bbox(geo.blocks_bbox, y=top, y2=bot)
+            if group == 1:
+                yield row_bbox
+                continue
+            ts = [x / group for x in range(group + 1)]
+            xs = [row_bbox.x + x * row_bbox.width for x in ts]
+            for x, x2 in it.pairwise(xs):
+                yield su.cut_bbox(row_bbox, x=x, x2=x2)
+
+    @property
+    def bboxes(self) -> Iterator[su.BoundingBox]:
+        """Pad bboxes para restaurar el PALETTE_GAP."""
+        for bbox in self._bboxes:
+            yield su.pad_bbox(bbox, -geo.PALETTE_GAP / 2)
+
+
+def classic_color_blocks(
+    colors: Iterable[str] | Iterable[tuple[float, float, float]],
+) -> ColorBlocks:
+    """Crear el diseño de bloques de color en mis paletas anteriores.
+
+    000
+    000
+
+    111
+    111
+
+    222
+    222
+
+    333
+    333
+
+    4 5
+    4 5
+    4 5
+
+    :param colors: una lista de colores hexadecimales o RGB
+    :return: una instancia de ColorBlocks
+    """
+    colors = [color_to_hex(c) for c in colors]
+    height = geo.blocks_bbox.height / 5
+    return ColorBlocks(colors, [height] * 5, [1, 1, 1, 1, 2])

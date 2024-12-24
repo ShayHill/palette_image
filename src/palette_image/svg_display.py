@@ -17,40 +17,24 @@ fuera de este proyecto donde el buscador de nombres de colores no estaría dispo
 
 import json
 import os
-from collections.abc import Iterable, Sequence
 from pathlib import Path
 
 import svg_ultralight as su
-from basic_colormath import rgb_to_hex
 from lxml import etree
 from svg_ultralight import write_png, write_svg
 from svg_ultralight.constructors import new_sub_element
 
 import palette_image.geometry as geo
-from palette_image.color_block_ops import position_blocks
-from palette_image.colornames import get_colornames
+from palette_image.color_block_ops import ColorBlocks
 from palette_image.globs import INKSCAPE_EXE
 from palette_image.image_ops import new_image_elem_in_bbox
 
 _CLIP_ID = "content_clip"
 
 
-def _color_to_hex(color: tuple[float, float, float] | str) -> str:
-    """Convertir un color a una cadena hexadecimal.
-
-    :param color: un color como una tupla RGB o una cadena hexadecimal con o sin el
-        signo "#"
-    :return: una cadena hexadecimal con el signo "#"
-    """
-    if isinstance(color, str):
-        return "#" + color.lstrip("#")
-    return rgb_to_hex(color)
-
-
 def _serialize_palette_data(
     filename: str | os.PathLike[str],
-    colors: Iterable[tuple[float, float, float]] | Iterable[str],
-    ratios: Iterable[float],
+    color_blocks: ColorBlocks,
     center: tuple[float, float] | None = None,
     comment: str = "",
 ) -> str:
@@ -70,13 +54,11 @@ def _serialize_palette_data(
     Esta información se puede utilizar para recrear la paleta en el futuro o crear un
     texto accompanãmiento para la paleta.
     """
-    hex_colors = [x if isinstance(x, str) else rgb_to_hex(x) for x in colors]
     palette_data = {
         "filename": Path(filename).name,
-        "colors": hex_colors,
-        "ratios": list(ratios),
+        "colors": color_blocks.colors,
         "center": center,
-        "colornames": get_colornames(*hex_colors),
+        "colornames": color_blocks.names,
         "comment": comment,
     }
     return json.dumps(palette_data)
@@ -105,8 +87,7 @@ def _add_masked_content(palette: su.BoundElement) -> su.BoundElement:
 
 def new_palette_blem(
     filename: Path | str,
-    palette_colors: Sequence[tuple[float, float, float]] | Sequence[str],
-    dist: list[int],
+    color_blocks: ColorBlocks,
     center: tuple[float, float] | None = None,
     comment: str = "",
 ) -> su.BoundElement:
@@ -119,32 +100,26 @@ def new_palette_blem(
         verdadero centro se usará. Esto es para alterar el recorte de la imagen de
         origen.
     """
-    comment = _serialize_palette_data(filename, palette_colors, dist, center, comment)
+    comment = _serialize_palette_data(filename, color_blocks, center, comment)
     palette = _new_palette_group(comment)
     content = _add_masked_content(palette)
 
     content.elem.append(new_image_elem_in_bbox(filename, geo.image_bbox, center))
-
-    icolors: Iterable[tuple[float, float, float] | str] = iter(palette_colors)
-    block_bboxes = position_blocks(geo.blocks_bbox, dist)
-    block_colors = map(_color_to_hex, icolors)
-    for block, color in zip(block_bboxes, block_colors, strict=True):
-        block_with_gap = su.pad_bbox(block, -geo.PALETTE_GAP / 2)
-        content.elem.append(su.new_bbox_rect(block_with_gap, fill=color))
+    for block, color in zip(color_blocks.bboxes, color_blocks.colors, strict=True):
+        content.elem.append(su.new_bbox_rect(block, fill=color))
 
     return palette
 
 
 def write_palette(
     filename: Path | str,
-    palette_colors: Sequence[tuple[float, float, float]],
-    outfile: Path,
-    dist: list[int],
+    color_blocks: ColorBlocks,
+    outfile: str | os.PathLike[str],
     center: tuple[float, float] | None = None,
     comment: str = "",
     print_width: float = 800,
 ) -> None:
-    pal = new_palette_blem(filename, palette_colors, dist, center, comment)
+    pal = new_palette_blem(filename, color_blocks, center, comment)
     root = su.new_svg_root_around_bounds(pal, print_width_=print_width)
     root.extend(list(pal.elem))
     outfile = Path(outfile)
