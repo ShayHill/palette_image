@@ -26,9 +26,10 @@ from lxml import etree
 from svg_ultralight import write_png, write_svg
 from svg_ultralight.constructors import new_sub_element
 
+import palette_image.geometry as geo
 from palette_image.color_block_ops import position_blocks
 from palette_image.colornames import get_colornames
-from palette_image.globs import INKSCAPE_EXE, PAD, PALETTE_GAP, RAD, SIZE, blocks_wide
+from palette_image.globs import INKSCAPE_EXE
 from palette_image.image_ops import new_image_elem_in_bbox
 
 _CLIP_ID = "content_clip"
@@ -83,42 +84,23 @@ def _serialize_palette_data(
 
 def _new_palette_group(comment: str) -> su.BoundElement:
     """Devuelve un nuevo BoundElement "g" con un comentario y fondo blanco."""
-    palette = su.BoundElement(su.new_element("g"), su.BoundingBox(0, 0, *SIZE))
+    palette = su.BoundElement(su.new_element("g"), geo.palette_bbox)
     palette.elem.append(etree.Comment(comment))
-    rad = RAD + PAD
+    rad = geo.RAD + geo.PAD
     palette.elem.append(su.new_bbox_rect(palette.bbox, rx=rad, ry=rad, fill="white"))
     return palette
 
 
 def _add_masked_content(palette: su.BoundElement) -> su.BoundElement:
     """Añande un área de contenindo enmascaranda a la paleta."""
-    content_bbox = su.pad_bbox(palette.bbox, -PAD)
-
     defs = su.new_sub_element(palette.elem, "defs")
 
     content_mask = new_sub_element(defs, "clipPath", id=_CLIP_ID)
-    rad = RAD
-    content_mask.append(su.new_bbox_rect(content_bbox, rx=rad, ry=rad))
+    rad = geo.RAD
+    content_mask.append(su.new_bbox_rect(geo.content_bbox, rx=rad, ry=rad))
 
     content_elem = su.new_sub_element(palette.elem, "g", clip_path=f"url(#{_CLIP_ID})")
-    return su.BoundElement(content_elem, content_bbox)
-
-
-def _split_content_into_image_and_blocks(
-    content: su.BoundElement,
-) -> tuple[su.BoundElement, su.BoundElement]:
-    """Devuelve BoundElements para la imagen y los bloques de color."""
-    # establecer el ancho para que las pilas de 5 bloques de altura estén hechas de
-    # cuadrados
-    blocks_x = content.x2 - blocks_wide
-    image_x2 = blocks_x - PALETTE_GAP
-
-    image_bbox = su.cut_bbox(content, x2=image_x2)
-    blocks_bbox = su.cut_bbox(content, x=blocks_x)
-    return (
-        su.BoundElement(content.elem, image_bbox),
-        su.BoundElement(content.elem, blocks_bbox),
-    )
+    return su.BoundElement(content_elem, geo.content_bbox)
 
 
 def new_palette_blem(
@@ -141,20 +123,14 @@ def new_palette_blem(
     palette = _new_palette_group(comment)
     content = _add_masked_content(palette)
 
-    image, blocks = _split_content_into_image_and_blocks(content)
-
-    image.elem.append(new_image_elem_in_bbox(filename, image.bbox, center))
-
-    # Relennar los bloques y luego cortarlos sin lidiar con los espacios. Eliminar
-    # este relleno màs tarde para obtener PALETTE_GAP
-    blocks_bbox = su.pad_bbox(blocks, PALETTE_GAP / 2)
+    content.elem.append(new_image_elem_in_bbox(filename, geo.image_bbox, center))
 
     icolors: Iterable[tuple[float, float, float] | str] = iter(palette_colors)
-    block_bboxes = position_blocks(blocks_bbox, dist)
+    block_bboxes = position_blocks(geo.blocks_bbox, dist)
     block_colors = map(_color_to_hex, icolors)
     for block, color in zip(block_bboxes, block_colors, strict=True):
-        block_with_gap = su.pad_bbox(block, -PALETTE_GAP / 2)
-        blocks.elem.append(su.new_bbox_rect(block_with_gap, fill=color))
+        block_with_gap = su.pad_bbox(block, -geo.PALETTE_GAP / 2)
+        content.elem.append(su.new_bbox_rect(block_with_gap, fill=color))
 
     return palette
 
