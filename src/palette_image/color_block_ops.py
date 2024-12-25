@@ -30,6 +30,7 @@ from basic_colormath import rgb_to_hex
 
 from palette_image import geometry as geo
 from palette_image.colornames import get_colornames
+from palette_image.partition_colors import fit_partition_to_distribution
 
 
 def color_to_hex(color: tuple[float, float, float] | str) -> str:
@@ -220,6 +221,7 @@ class ColorBlocks:
 
 def classic_color_blocks(
     colors: Iterable[str] | Iterable[tuple[float, float, float]],
+    dist: list[float] | None = None,
 ) -> ColorBlocks:
     """Crear el diseño de bloques de color en mis paletas anteriores.
 
@@ -240,8 +242,36 @@ def classic_color_blocks(
     4 5
 
     :param colors: una lista de colores hexadecimales o RGB
+    :param dist: una lista de valores que definen la altura de cada fila de bloques.
+        Aque, se ignora.
     :return: una instancia de ColorBlocks
     """
+    del dist
     colors = [color_to_hex(c) for c in colors]
     height = geo.blocks_bbox.height / 5
     return ColorBlocks(colors, [height] * 5, [1, 1, 1, 1, 2])
+
+
+def avant_garde_color_blocks(
+    colors: Iterable[str] | Iterable[tuple[float, float, float]],
+    dist: list[float] | None = None,
+) -> ColorBlocks:
+    """Crear el diseño de bloques de color de mis paletas avant garde.
+
+    Eston tienen un poco más de flexibilidad que los bloques clásicos. Los grupos de
+    [1] o [1, 1] tiened alturas fijas. Todos los demás grupos pueden estirarse para
+    llenar la altura del bbox.
+
+    La `dist` se fuerza en 12 unidades discretas.
+
+    :param colors: una lista de colores hexadecimales o RGB
+    :param dist: una lista de valores que definen la altura de cada fila de bloques.
+    :return: una instancia de ColorBlocks
+    """
+    if dist is None:
+        return classic_color_blocks(colors)
+    colors = [color_to_hex(c) for c in colors]
+    discrete_dist = fit_partition_to_distribution(12, dist)
+    groups = _group_double_1s(discrete_dist)
+    heights = _divvy_height(geo.blocks_bbox, groups)
+    return ColorBlocks(colors, heights, [len(x) for x in groups])
