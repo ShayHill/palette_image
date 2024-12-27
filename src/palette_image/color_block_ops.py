@@ -181,6 +181,8 @@ class ColorBlocks:
     :param heights: una lista de alturas *absolutas* para cada grupo de bloques de
         color
     :param groups: una lista de número de entradas de paleta en cada grupo
+    :param args: a string of the input arguments (colors and dist) output by whatever
+        created the palette.
 
     `heights` y `groups` deben tener la misma longitud.
     `colors` debe tener longitud == `sum(groups)`.
@@ -198,6 +200,7 @@ class ColorBlocks:
     colors: list[str]
     heights: list[float]
     groups: list[int]
+    input_args: str
 
     @property
     def names(self) -> list[str]:
@@ -224,6 +227,16 @@ class ColorBlocks:
         """Pad bboxes para restaurar el PALETTE_GAP."""
         for bbox in self._bboxes:
             yield su.pad_bbox(bbox, -geo.PALETTE_GAP / 2)
+
+
+def _get_input_arg_string(colors: Iterable[str], dist: list[float] | None) -> str:
+    """Crear una cadena de argumentos para la función de entrada."""
+    colors = [color_to_hex(c)[1:] for c in colors]
+    dist = dist or [1.0] * len(colors)
+    if len(dist) != len(colors):
+        msg = "Colors and dist must have the same length."
+        raise ValueError(msg)
+    return "|".join(it.chain(colors, map(str, dist)))
 
 
 def classic_color_blocks_args(
@@ -256,7 +269,12 @@ def classic_color_blocks(
     """
     colors, groups = classic_color_blocks_args(colors, dist)
     height = geo.blocks_bbox.height / 5
-    return ColorBlocks(colors, [height] * 5, [len(x) for x in groups])
+    return ColorBlocks(
+        colors,
+        [height] * 5,
+        [len(x) for x in groups],
+        _get_input_arg_string(colors, dist),
+    )
 
 
 def avant_garde_color_blocks_args(
@@ -302,7 +320,9 @@ def avant_garde_color_blocks(
     """
     colors, groups = avant_garde_color_blocks_args(colors, dist)
     heights = _divvy_height(geo.blocks_bbox, groups)
-    return ColorBlocks(colors, heights, [len(x) for x in groups])
+    return ColorBlocks(
+        colors, heights, [len(x) for x in groups], _get_input_arg_string(colors, dist)
+    )
 
 
 def _redistribute_slivers(dist: list[int]) -> list[int]:
@@ -391,4 +411,6 @@ def sliver_color_blocks(
     else:
         locks = [([1], geo.blocks_bbox.width / 4)]
     heights = _divvy_height(geo.blocks_bbox, groups, locks=locks)
-    return ColorBlocks(colors, heights, [len(x) for x in groups])
+    return ColorBlocks(
+        colors, heights, [len(x) for x in groups], _get_input_arg_string(colors, dist)
+    )

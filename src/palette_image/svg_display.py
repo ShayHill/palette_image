@@ -59,6 +59,7 @@ def _serialize_palette_data(
         "colors": color_blocks.colors,
         "center": center,
         "colornames": color_blocks.names,
+        "input-args": color_blocks.input_args,
         "comment": comment,
     }
     return json.dumps(palette_data)
