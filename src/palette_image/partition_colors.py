@@ -17,6 +17,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar
 
 from restricted_partition import iter_partition
+from operator import itemgetter
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
@@ -68,11 +69,15 @@ def _sort_retain_order(items: list[_SortableT]) -> tuple[list[_SortableT], list[
     """Ordenar elementos, pero conservar el orden original de los elementos.
 
     :param items: los elementos a ordenar
-    :return: una tupla con los elementos ordenados y una lista de índices que
-        representan la permutación de los elementos originales
+    :return: una tupla con los elementos ordenados y una lista de índices para
+        devolver los elementos ordenados a su orden original.
+
+    sorted, indices = _sort_retain_order(items)
+    [sorted[i] for i in indices] == items
     """
-    itm_idx = sorted((x, i) for i, x in enumerate(items))
-    return [x[0] for x in itm_idx], [x[1] for x in itm_idx]
+    orig_idx = [i for i, _ in sorted(enumerate(items), key=itemgetter(1))]
+    dest_idx = [j for j, _ in sorted(enumerate(orig_idx), key=itemgetter(1))]
+    return [items[i] for i in orig_idx], dest_idx
 
 
 def _get_restricted_partition(num_items: int, num_groups: int) -> Iterator[list[int]]:
@@ -92,6 +97,26 @@ def _get_restricted_partition(num_items: int, num_groups: int) -> Iterator[list[
     return (x for x in all_partitions if len(x) == num_groups)
 
 
+def _score_partitions_by_fit(
+    items: int, goal_dist: list[float]
+) -> Iterator[tuple[float, list[int]]]:
+    """Yield particiones de longitud goal_dist de items, puntuado por chi-squared.
+
+    :param items: el número entero que se va a *partition*
+    :param goal_dist: la distribución objetivo (p relativo para cada elemento).
+        No necesita sumar a 1.
+    :yield: una tupla con el ajuste chi-squared y la *partition*
+    """
+    sorted_dist, sort_order = _sort_retain_order(goal_dist)
+
+    def fit(partition: list[int]) -> float:
+        """Que tan cerca se ajusta la partition a la distribution objetivo."""
+        return _get_chi_squared(sorted_dist, list(map(float, partition)))
+
+    for ps in _get_restricted_partition(items, len(goal_dist)):
+        yield fit(ps), [ps[i] for i in sort_order]
+
+
 def fit_partition_to_distribution(items: int, goal_dist: list[float]) -> list[int]:
     """Partition un entero para ajustarse a goal_dist lo más cerca posible.
 
@@ -105,12 +130,41 @@ def fit_partition_to_distribution(items: int, goal_dist: list[float]) -> list[in
     fit_partition_to_distribution(3, [1/3, 2/3]) -> [1, 2]
     fit_partition_to_distribution(10, [2/3, 1/3]) -> [7, 3]
     """
-    sorted_dist, sort_order = _sort_retain_order(goal_dist)
+    return min(_score_partitions_by_fit(items, goal_dist), key=itemgetter(0))[1]
 
-    def fit(partition: list[int]) -> float:
-        """Que tan cerca se ajusta la partition a la distribution objetivo."""
-        return _get_chi_squared(sorted_dist, list(map(float, partition)))
 
-    parts = _get_restricted_partition(items, len(goal_dist))
-    best_fit = sorted(parts, key=fit)[0]
-    return [best_fit[i] for i in sort_order]
+def fit_partition_to_distribution_with_slivers(
+    items: int, goal_dist: list[float]
+) -> list[int]:
+    """Partition un entero para ajustarse a goal_dist lo más cerca posible.
+
+    :param items: el número entero que se va a *partition*
+    :param goal_dist: la distribución objetivo (p relativo para cada elemento).
+        No necesita sumar a 1.
+    :return: items partitioned into len(goal_dist) slots, portioned as closely as
+        possible to goal_dist.
+
+    Esta versión permite *slivers* de 1. Los arreglos de bloques de colores como los
+    de Alphonse Mucha usan un valor alto (24) de *items* y un altura fija delgado para
+    1s.  Esto representa 1s como *slivers* de 1/24 de altura de la altura total. Para
+    mejorar la estética, el código posterior a esta función moverá estas *slivers*
+    para que no estén en la parte superior o inferior (donde se ven mal con las
+    curvas) o adyacentes entre sí. La restricción aquí es que no puede haber más de 2
+    *slivers* en una paleta de 6 colores, de lo contrario esta reorganización no
+    sería posible.
+
+    Si no hay 1s en la mejor partición y items//2 >= len(goal dist), entonces haga
+    más gruesa la partición para que parezca menos *continua*.
+    """
+    max_1s = (len(goal_dist) + 1) // 2 - 1
+    if items < max_1s + (len(goal_dist) - max_1s) * 2:
+        return fit_partition_to_distribution(items, goal_dist)
+    get_score = itemgetter(0)
+    get_ps = itemgetter(1)
+
+    scored = sorted(_score_partitions_by_fit(items, goal_dist), key=get_score)
+    best_valid = next(ps for ps in map(get_ps, scored) if ps.count(1) <= max_1s)
+
+    if best_valid.count(1) == 0 and items // 2 >= len(goal_dist):
+        return fit_partition_to_distribution_with_slivers(items // 2, goal_dist)
+    return best_valid

@@ -22,6 +22,7 @@ dist valores > 1 serán estirados.
 """
 
 import dataclasses
+import math
 import itertools as it
 from collections.abc import Iterable, Iterator, Sequence
 
@@ -30,7 +31,10 @@ from basic_colormath import rgb_to_hex
 
 from palette_image import geometry as geo
 from palette_image.colornames import get_colornames
-from palette_image.partition_colors import fit_partition_to_distribution
+from palette_image.partition_colors import (
+    fit_partition_to_distribution,
+    fit_partition_to_distribution_with_slivers,
+)
 
 
 def color_to_hex(color: tuple[float, float, float] | str) -> str:
@@ -274,4 +278,81 @@ def avant_garde_color_blocks(
     discrete_dist = fit_partition_to_distribution(12, dist)
     groups = _group_double_1s(discrete_dist)
     heights = _divvy_height(geo.blocks_bbox, groups)
+    return ColorBlocks(colors, heights, [len(x) for x in groups])
+
+
+def _redistribute_slivers(dist: list[int]) -> list[int]:
+    """Redistribuya *slivers* para que no estén en la puntos finales ni adyacentes.
+
+    :param dist: una lista de enteros representando la altura relativa de cada bloque
+    :return: una lista de enteros de modo que [dist[i] for i in return] es
+        reorganizará dist para que no haya fragmentos adyacentes o en los puntos
+        finales.
+    """
+    if sum(dist) < 24:
+        # ya engrosado. Los 1s ya no son *slivers*.
+        return list(range(len(dist)))
+
+    if dist[0] != 1 and dist[-1] != 1 and (1, 1) not in it.pairwise(dist):
+        return list(range(len(dist)))
+
+    def get_score(d: list[int]) -> int:
+        """Puntuar una distribución de bloques."""
+        reordered = (dist[x] for x in d)
+        return max(sum(ab) for ab in it.pairwise(reordered))
+
+    large = [i for i, x in enumerate(dist) if x > 1]
+    small = [i for i, x in enumerate(dist) if x == 1]
+    if len(small) >= len(large):
+        msg = (
+            f"Cannot distribute {len(small)} slivers among {len(large)}"
+            + " blocks with none adjacent or at endpoints."
+        )
+        raise ValueError(msg)
+    assert len(small) < len(large) - 1
+
+    best_score = math.inf
+    best_dist = list(range(len(dist)))
+
+    for slots in it.combinations(range(1, len(large)), len(small)):
+        candidate = large.copy()
+        for i, slot in enumerate(reversed(slots)):
+            candidate.insert(slot, small[-i])
+        score = get_score(candidate)
+        if score < best_score:
+            best_score = score
+            best_dist = candidate
+
+    return best_dist
+
+
+def sliver_color_blocks(
+    colors: Iterable[str] | Iterable[tuple[float, float, float]],
+    dist: list[float] | None = None,
+) -> ColorBlocks:
+    """Crear el diseño de bloques de color de mis paletas Alphonse Mucha.
+
+    Este es el más flexible porque distribuye los colores en 24 porciones discretas.
+    Esto significa que los 1 son bastante delgados. Estos bloques delgados no se ven
+    bien en los puntos finales o adyacentes entre sí, por lo que se mueven (y los
+    colores con ellos) para evitar estas situaciones. Eso significa que esta función
+    podría reordenar los colores.
+
+    :param colors: una lista de colores hexadecimales o RGB
+    :param dist: una lista de valores que definen la altura de cada fila de bloques.
+    :return: una instancia de ColorBlocks
+    """
+    if dist is None:
+        return classic_color_blocks(colors)
+    colors = [color_to_hex(c) for c in colors]
+    discrete_dist = fit_partition_to_distribution_with_slivers(24, dist)
+    new_order = _redistribute_slivers(discrete_dist)
+    colors = [colors[i] for i in new_order]
+    discrete_dist = [discrete_dist[i] for i in new_order]
+    groups = _group_double_1s(discrete_dist)
+    if sum(discrete_dist) < 24:
+        locks = None
+    else:
+        locks = [([1], geo.blocks_bbox.width / 4)]
+    heights = _divvy_height(geo.blocks_bbox, groups, locks=locks)
     return ColorBlocks(colors, heights, [len(x) for x in groups])
