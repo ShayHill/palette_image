@@ -25,6 +25,7 @@ import dataclasses
 import itertools as it
 import math
 from collections.abc import Iterable, Iterator, Sequence
+import functools
 
 import svg_ultralight as su
 from basic_colormath import rgb_to_hex
@@ -65,7 +66,7 @@ def _group_double_1s(slices: list[int]) -> list[list[int]]:
         >>> _group_double_1s([1, 2, 3, 4, 1, 1])
         [[1], [2], [3], [4], [1, 1]]
 
-    Comienza desde -1 y se detiente después  de crear el primer [1, 1].
+    Comienza desde -1 y se detiente después de crear el primer [1, 1].
 
     slices = [1, 1, 1, 1, 1, 2] -> [[1], [1], [1], [1, 1], [2]]
     """
@@ -281,8 +282,8 @@ def avant_garde_color_blocks_args(
     if dist is None:
         return classic_color_blocks_args(colors)
     discrete_dist = fit_partition_to_distribution(AVANT_GARDE_SLICES, dist)
-    if discrete_dist.count(1) == 0:
-        return classic_color_blocks_args(colors)
+    if min(discrete_dist) > 1:
+        return classic_color_blocks_args(colors, dist)
     colors = [color_to_hex(c) for c in colors]
     groups = _group_double_1s(discrete_dist)
     return colors, groups
@@ -311,6 +312,20 @@ def avant_garde_color_blocks(
     )
 
 
+def _has_no_illegal_slivers(dist: list[int]) -> bool:
+    """Devuelve True si no hay unos en los puntos finales o adyacentes entre sí."""
+    return dist[0] != 1 and dist[-1] != 1 and (1, 1) not in it.pairwise(dist)
+
+
+def _get_maximum_adjacent_sum(
+    values: list[int] | list[float], order: list[int] | None = None
+) -> float:
+    """Devuelve la suma máxima de valores adyacentes."""
+    if order is not None:
+        values = [values[i] for i in order]
+    return max(sum(ab) for ab in it.pairwise(values))
+
+
 def _redistribute_slivers(dist: list[int]) -> list[int]:
     """Redistribuya *slivers* para que no estén en la puntos finales ni adyacentes.
 
@@ -318,37 +333,41 @@ def _redistribute_slivers(dist: list[int]) -> list[int]:
     :return: una lista de enteros de modo que [dist[i] for i in return] es
         reorganizará dist para que no haya fragmentos adyacentes o en los puntos
         finales.
+
+    If there are 1s at endpoints or adjacent to each other, try every possible
+    insertion of 1s into the larger blocks to minimize the maximum sum of adjacent
+    blocks.
+
+    Si hay 1s en los puntos finales o adyacentes entre sí, intente cade inserción
+    posible de unos en los bloques más grandes para minimizar la suma máxima de
+    bloques adyacentes.
     """
-    if dist[0] != 1 and dist[-1] != 1 and (1, 1) not in it.pairwise(dist):
+    if _has_no_illegal_slivers(dist):
         return list(range(len(dist)))
 
-    def get_score(d: list[int]) -> int:
-        """Puntuar una distribución de bloques."""
-        reordered = (dist[x] for x in d)
-        return max(sum(ab) for ab in it.pairwise(reordered))
-
-    large = [i for i, x in enumerate(dist) if x > 1]
-    small = [i for i, x in enumerate(dist) if x == 1]
-    if len(small) >= len(large):
+    not_slivers = [i for i, x in enumerate(dist) if x > 1]
+    slivers = [i for i, x in enumerate(dist) if x == 1]
+    if len(slivers) >= len(not_slivers):
         msg = (
-            f"Cannot distribute {len(small)} slivers among {len(large)}"
+            f"Cannot distribute {len(slivers)} slivers among {len(not_slivers)}"
             + " blocks with none adjacent or at endpoints."
         )
         raise ValueError(msg)
 
+    get_score = functools.partial(_get_maximum_adjacent_sum, dist)
     best_score = math.inf
-    best_dist = list(range(len(dist)))
+    best_order = list(range(len(dist)))
 
-    for slots in it.combinations(range(1, len(large)), len(small)):
-        candidate = large.copy()
+    for slots in it.combinations(range(1, len(not_slivers)), len(slivers)):
+        candidate_order = not_slivers.copy()
         for i, slot in enumerate(reversed(slots)):
-            candidate.insert(slot, small[-i])
-        score = get_score(candidate)
+            candidate_order.insert(slot, slivers[-i])
+        score = get_score(candidate_order)
         if score < best_score:
             best_score = score
-            best_dist = candidate
+            best_order = candidate_order
 
-    return best_dist
+    return best_order
 
 
 def sliver_color_blocks_args(

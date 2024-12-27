@@ -94,6 +94,12 @@ class TestLayouts:
             assert groups[-1] != [1]
             assert (1, 1) not in list(zip(groups, groups[1:], strict=False))
 
+    def test_sliver_flat(self):
+        """Fall back to classic layout all dist equal."""
+        color_blocks = sliver_color_blocks(TEST_COLORS, [2, 2, 2, 2, 2, 2])
+        outfile = TEST_OUTPUT / "sliver_flat.svg"
+        svg_display.write_palette(TEST_IMAGE, color_blocks, outfile)
+
     def test_sliver_perceptual(self):
         """Test a perceptual layout."""
         color_blocks = sliver_color_blocks(TEST_COLORS, [1, 2, 3, 4, 5, 6])
