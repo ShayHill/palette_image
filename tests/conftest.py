@@ -15,3 +15,6 @@ def pytest_assertrepr_compare(config: Any, op: str, left: str, right: str):
 
 
 TEST_RESOURCES = Path(__file__).parent / "resources"
+TEST_OUTPUT = Path(__file__).parent / "output"
+
+TEST_OUTPUT.mkdir(exist_ok=True)

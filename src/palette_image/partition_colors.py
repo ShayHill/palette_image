@@ -14,10 +14,10 @@ color se asigna un número de esas rebanadas (mínimo 1).
 
 from __future__ import annotations
 
+from operator import itemgetter
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar
 
 from restricted_partition import iter_partition
-from operator import itemgetter
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
@@ -157,14 +157,7 @@ def fit_partition_to_distribution_with_slivers(
     más gruesa la partición para que parezca menos *continua*.
     """
     max_1s = (len(goal_dist) + 1) // 2 - 1
-    if items < max_1s + (len(goal_dist) - max_1s) * 2:
-        return fit_partition_to_distribution(items, goal_dist)
-    get_score = itemgetter(0)
-    get_ps = itemgetter(1)
-
-    scored = sorted(_score_partitions_by_fit(items, goal_dist), key=get_score)
-    best_valid = next(ps for ps in map(get_ps, scored) if ps.count(1) <= max_1s)
-
-    if best_valid.count(1) == 0 and items // 2 >= len(goal_dist):
-        return fit_partition_to_distribution_with_slivers(items // 2, goal_dist)
-    return best_valid
+    ps = min(_score_partitions_by_fit(items, goal_dist), key=itemgetter(0))[1]
+    if ps.count(1) <= max_1s:
+        return ps
+    return fit_partition_to_distribution(items // 2, goal_dist)

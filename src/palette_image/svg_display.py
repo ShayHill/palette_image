@@ -124,4 +124,5 @@ def write_palette(
     root.extend(list(pal.elem))
     outfile = Path(outfile)
     _ = write_svg(outfile.with_suffix(".svg"), root)
-    _ = write_png(INKSCAPE_EXE, outfile, root)
+    if False:
+        _ = write_png(INKSCAPE_EXE, outfile, root)

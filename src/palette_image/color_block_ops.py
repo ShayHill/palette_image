@@ -22,8 +22,8 @@ dist valores > 1 serán estirados.
 """
 
 import dataclasses
-import math
 import itertools as it
+import math
 from collections.abc import Iterable, Iterator, Sequence
 
 import svg_ultralight as su
@@ -35,6 +35,9 @@ from palette_image.partition_colors import (
     fit_partition_to_distribution,
     fit_partition_to_distribution_with_slivers,
 )
+
+AVANT_GARDE_SLICES = 12
+SLIVER_SLICES = 24
 
 
 def color_to_hex(color: tuple[float, float, float] | str) -> str:
@@ -223,37 +226,62 @@ class ColorBlocks:
             yield su.pad_bbox(bbox, -geo.PALETTE_GAP / 2)
 
 
+def classic_color_blocks_args(
+    colors: Iterable[str] | Iterable[tuple[float, float, float]],
+    dist: list[float] | None = None,
+) -> tuple[list[str], list[list[int]]]:
+    """Crear los argumentos para ColorBlocks desde los argumentos de la función.
+
+    :param colors: una lista de colores hexadecimales o RGB
+    :param dist: una lista de valores que definen la altura de cada fila de bloques.
+        Aque, se ignora.
+    :return: una tupla de dos listas: colors, groups
+    """
+    del dist
+    colors = [color_to_hex(c) for c in colors]
+    groups = [[1], [1], [1], [1], [1, 1]]
+    return colors, groups
+
+
 def classic_color_blocks(
     colors: Iterable[str] | Iterable[tuple[float, float, float]],
     dist: list[float] | None = None,
 ) -> ColorBlocks:
     """Crear el diseño de bloques de color en mis paletas anteriores.
 
-    000
-    000
-
-    111
-    111
-
-    222
-    222
-
-    333
-    333
-
-    4 5
-    4 5
-    4 5
-
     :param colors: una lista de colores hexadecimales o RGB
     :param dist: una lista de valores que definen la altura de cada fila de bloques.
         Aque, se ignora.
     :return: una instancia de ColorBlocks
     """
-    del dist
-    colors = [color_to_hex(c) for c in colors]
+    colors, groups = classic_color_blocks_args(colors, dist)
     height = geo.blocks_bbox.height / 5
-    return ColorBlocks(colors, [height] * 5, [1, 1, 1, 1, 2])
+    return ColorBlocks(colors, [height] * 5, [len(x) for x in groups])
+
+
+def avant_garde_color_blocks_args(
+    colors: Iterable[str] | Iterable[tuple[float, float, float]],
+    dist: list[float] | None = None,
+) -> tuple[list[str], list[list[int]]]:
+    """Crear los argumentos para ColorBlocks desde los argumentos de la función.
+
+    :param colors: una lista de colores hexadecimales o RGB
+    :param dist: una lista de valores que definen la altura de cada fila de bloques.
+        Aque, se ignora.
+    :return: una tupla de dos listas: colors, groups
+
+    Recurra al diseño *classic* si no hay un argumento dist o si todas las
+    proporciones dist son iguales (después de distribuirlas en 12 unidades). Esto
+    hace que [1, 1, 1, 1, 1, 1] tenga el mismo aspecto que [2, 2, 2, 2, 2, 2].
+    """
+    if dist is None:
+        return classic_color_blocks_args(colors)
+    discrete_dist = fit_partition_to_distribution(AVANT_GARDE_SLICES, dist)
+    if discrete_dist.count(1) == 0:
+        return classic_color_blocks_args(colors)
+    colors = [color_to_hex(c) for c in colors]
+    groups = _group_double_1s(discrete_dist)
+    return colors, groups
 
 
 def avant_garde_color_blocks(
@@ -272,11 +300,7 @@ def avant_garde_color_blocks(
     :param dist: una lista de valores que definen la altura de cada fila de bloques.
     :return: una instancia de ColorBlocks
     """
-    if dist is None:
-        return classic_color_blocks(colors)
-    colors = [color_to_hex(c) for c in colors]
-    discrete_dist = fit_partition_to_distribution(12, dist)
-    groups = _group_double_1s(discrete_dist)
+    colors, groups = avant_garde_color_blocks_args(colors, dist)
     heights = _divvy_height(geo.blocks_bbox, groups)
     return ColorBlocks(colors, heights, [len(x) for x in groups])
 
@@ -289,10 +313,6 @@ def _redistribute_slivers(dist: list[int]) -> list[int]:
         reorganizará dist para que no haya fragmentos adyacentes o en los puntos
         finales.
     """
-    if sum(dist) < 24:
-        # ya engrosado. Los 1s ya no son *slivers*.
-        return list(range(len(dist)))
-
     if dist[0] != 1 and dist[-1] != 1 and (1, 1) not in it.pairwise(dist):
         return list(range(len(dist)))
 
@@ -309,7 +329,6 @@ def _redistribute_slivers(dist: list[int]) -> list[int]:
             + " blocks with none adjacent or at endpoints."
         )
         raise ValueError(msg)
-    assert len(small) < len(large) - 1
 
     best_score = math.inf
     best_dist = list(range(len(dist)))
@@ -326,31 +345,48 @@ def _redistribute_slivers(dist: list[int]) -> list[int]:
     return best_dist
 
 
+def sliver_color_blocks_args(
+    colors: Iterable[str] | Iterable[tuple[float, float, float]],
+    dist: list[float] | None = None,
+) -> tuple[list[str], list[list[int]]]:
+    """Crear los argumentos para ColorBlocks desde los argumentos de la función.
+
+    :param colors: una lista de colores hexadecimales o RGB
+    :param dist: una lista de valores que definen la altura de cada fila de bloques.
+    :return: una tupla de dos listas: colors, groups
+    """
+    if dist is None:
+        return classic_color_blocks_args(colors)
+    discrete_dist = fit_partition_to_distribution_with_slivers(SLIVER_SLICES, dist)
+    if min(discrete_dist) > 1:
+        return avant_garde_color_blocks_args(colors, dist)
+    colors = [color_to_hex(c) for c in colors]
+    new_order = _redistribute_slivers(discrete_dist)
+    colors = [colors[i] for i in new_order]
+    discrete_dist = [discrete_dist[i] for i in new_order]
+    groups = _group_double_1s(discrete_dist)
+    return colors, groups
+
+
 def sliver_color_blocks(
     colors: Iterable[str] | Iterable[tuple[float, float, float]],
     dist: list[float] | None = None,
 ) -> ColorBlocks:
     """Crear el diseño de bloques de color de mis paletas Alphonse Mucha.
 
+    :param colors: una lista de colores hexadecimales o RGB
+    :param dist: una lista de valores que definen la altura de cada fila de bloques.
+    :return: una instancia de ColorBlocks
+
     Este es el más flexible porque distribuye los colores en 24 porciones discretas.
     Esto significa que los 1 son bastante delgados. Estos bloques delgados no se ven
     bien en los puntos finales o adyacentes entre sí, por lo que se mueven (y los
     colores con ellos) para evitar estas situaciones. Eso significa que esta función
     podría reordenar los colores.
-
-    :param colors: una lista de colores hexadecimales o RGB
-    :param dist: una lista de valores que definen la altura de cada fila de bloques.
-    :return: una instancia de ColorBlocks
     """
-    if dist is None:
-        return classic_color_blocks(colors)
-    colors = [color_to_hex(c) for c in colors]
-    discrete_dist = fit_partition_to_distribution_with_slivers(24, dist)
-    new_order = _redistribute_slivers(discrete_dist)
-    colors = [colors[i] for i in new_order]
-    discrete_dist = [discrete_dist[i] for i in new_order]
-    groups = _group_double_1s(discrete_dist)
-    if sum(discrete_dist) < 24:
+    colors, groups = sliver_color_blocks_args(colors, dist)
+    if sum(map(sum, groups)) < SLIVER_SLICES:
+        # se utilizó otro tipo de diseño
         locks = None
     else:
         locks = [([1], geo.blocks_bbox.width / 4)]

@@ -4,3 +4,4 @@ dev-requirements.txt
 binaries/
 .vimrc
 .vimspector.json
+tests/output
