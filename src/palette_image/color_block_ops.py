@@ -159,20 +159,6 @@ def _divvy_height(
     return list(filter(None, heights))
 
 
-def position_blocks(bbox: su.BoundingBox, dist: list[int]) -> Iterator[su.BoundingBox]:
-    """Yield una BoundingBox para cada bloque en la paleta."""
-    groups = _group_double_1s(dist)
-    heights = _divvy_height(bbox, groups)
-
-    at_y = bbox.y
-    for group, height in zip(groups, heights, strict=True):
-        at_x = bbox.x
-        for width in (bbox.width * g / len(group) for g in group):
-            yield su.BoundingBox(at_x, at_y, width, height)
-            at_x += width
-        at_y += height
-
-
 @dataclasses.dataclass
 class ColorBlocks:
     """Todas información necesaria para crear los bloques de color.

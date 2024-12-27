@@ -23,11 +23,11 @@ import svg_ultralight as su
 from lxml import etree
 from svg_ultralight import write_png, write_svg
 from svg_ultralight.constructors import new_sub_element
+from svg_ultralight.image_ops import new_image_elem_in_bbox
 
 import palette_image.geometry as geo
 from palette_image.color_block_ops import ColorBlocks
 from palette_image.globs import INKSCAPE_EXE
-from palette_image.image_ops import new_image_elem_in_bbox
 
 _CLIP_ID = "content_clip"
 
