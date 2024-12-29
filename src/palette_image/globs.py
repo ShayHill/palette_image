@@ -19,10 +19,9 @@ _PROJECT = Path(__file__).parent.parent.parent
 BINARIES = _PROJECT / "binaries"
 RESOURCES = _PROJECT / "resources"
 
-COLORNAMES_CSV = RESOURCES / "colornames.csv"
-
 with TemporaryFile() as f:
     CACHE_DIR = Path(f.name).parent / "palette_image_cache"
+    COLORNAMES_CSV = Path(f.name).parent / "colornames.csv"
 
 for path in (BINARIES, RESOURCES, CACHE_DIR):
     path.mkdir(exist_ok=True)

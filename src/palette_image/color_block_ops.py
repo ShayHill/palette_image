@@ -22,10 +22,10 @@ dist valores > 1 serán estirados.
 """
 
 import dataclasses
+import functools
 import itertools as it
 import math
 from collections.abc import Iterable, Iterator, Sequence
-import functools
 
 import svg_ultralight as su
 from basic_colormath import rgb_to_hex

@@ -1,11 +1,10 @@
-"""Reimplement Python internal type hints that are not available in public modules.
+"""Type hints interno de Python que no están disponibles en módulos públicos.
 
 :author: Shay Hill
 :created: 2024-12-27
 """
 
 from typing import Any, Protocol, TypeAlias, TypeVar
-
 
 _T_contra = TypeVar("_T_contra", contravariant=True)
 

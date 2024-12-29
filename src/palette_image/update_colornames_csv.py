@@ -68,7 +68,7 @@ def _download_colornames_csv_to_resources() -> None:
 
 def update_colornames_csv() -> None:
     """At most once daily, check for updates to the colornames.csv file."""
-    if _read_cached_date_checked() == today:
+    if _read_cached_date_checked() == today and COLORNAMES_CSV.exists():
         return
     _ = sys.stdout.write("Daily update to colornames.csv\n")
     _download_colornames_csv_to_resources()
