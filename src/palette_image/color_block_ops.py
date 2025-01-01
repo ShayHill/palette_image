@@ -383,7 +383,7 @@ def sliver_color_blocks_args(
     if dist is None:
         return classic_color_blocks_args(colors)
     discrete_dist = fit_partition_to_distribution_with_slivers(SLIVER_SLICES, dist)
-    if min(discrete_dist) > 1:
+    if min(discrete_dist) > 1 or sum(discrete_dist) < SLIVER_SLICES:
         return avant_garde_color_blocks_args(colors, dist)
     colors = [color_to_hex(c) for c in colors]
     new_order = _redistribute_slivers(discrete_dist)

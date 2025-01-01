@@ -12,13 +12,21 @@ from palette_image.color_block_ops import (
     avant_garde_color_blocks_args,
     classic_color_blocks,
     classic_color_blocks_args,
-    sliver_color_blocks, sliver_color_blocks_args
+    sliver_color_blocks,
+    sliver_color_blocks_args,
 )
 import itertools as it
 
 TEST_IMAGE = TEST_RESOURCES / "Sam Francis - Middle Blue.jpg"
 
 TEST_COLORS = ["#382736", "#005780", "#d05100", "#d0b890", "#10a8b0", "#205031"]
+
+
+class TestDistributions:
+    def test_problematic(self):
+        """Test a dist that caused a problem from another project."""
+        dist = [13361, 187852, 10097, 462733, 57561, 10806, 515960.0]
+        _ = sliver_color_blocks_args(["#000000"] * 7, dist)
 
 
 class TestLayouts:
@@ -66,9 +74,7 @@ class TestLayouts:
 
     def test_avant_garde_small_double(self):
         """Use classic arrangement for 1s."""
-        color_blocks = avant_garde_color_blocks(
-            TEST_COLORS, [20, 20, 1, 1, 1, 20]
-        )
+        color_blocks = avant_garde_color_blocks(TEST_COLORS, [20, 20, 1, 1, 1, 20])
         outfile = TEST_OUTPUT / "avant_garde_small_double.svg"
         svg_display.write_palette(TEST_IMAGE, color_blocks, outfile)
 
@@ -105,7 +111,3 @@ class TestLayouts:
         color_blocks = sliver_color_blocks(TEST_COLORS, [1, 2, 3, 4, 5, 6])
         outfile = TEST_OUTPUT / "sliver.svg"
         svg_display.write_palette(TEST_IMAGE, color_blocks, outfile)
-
-
-
-
