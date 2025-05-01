@@ -1,0 +1,26 @@
+---
+layout: paginated-post
+title: AI-Generated Palettes
+subtitle: $subtitle
+index: ai-generated-palettes
+post_image: "/assets/img/blog/ai-generated-palettes/$image"
+alt_image: "/assets/img/blog/ai-generated-palettes/$alt_image"
+date: $date 11:48:58 -0500
+---
+
+<style>
+div.palette-image {
+  display: inline-block;
+  width: 70%;
+  max-width: 100%;
+}
+
+div.palette-colors {
+  display: inline-block;
+  width: auto;
+  min-width: 100px;
+  margin-bottom: 40px;
+}
+</style>
+
+$palettes

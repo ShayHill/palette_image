@@ -1,0 +1,3 @@
+### $title
+<div class="palette-image" markdown="span">![](/assets/img/blog/ai-generated-palettes/$image)</div>
+<div class="palette-colors">$colors</div>

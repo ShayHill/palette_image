@@ -12,7 +12,8 @@ dependencies = [
 "pillow",
 "requests",
 "restricted_partition",
-"svg_ultralight"
+"svg_ultralight",
+"titlecase"
 ]
 
 [project.optional-dependencies]
