@@ -26,7 +26,7 @@ def _map_colornames() -> dict[tuple[float, float, float], str]:
     with COLORNAMES_CSV.open(encoding="utf-8") as namefile:
         _ = namefile.readline()  # skip header
         colornames = namefile.readlines()
-    name_hex_tuples = (x.split(",") for x in colornames)
+    name_hex_tuples = (x.split(",")[:2] for x in colornames)
     return {hex_to_rgb(hex_): name for name, hex_ in name_hex_tuples}
 
 
