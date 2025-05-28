@@ -1,0 +1,1421 @@
+[
+  {
+    "title": "200522-Wes Anderson - Kind of Bird",
+    "colors": [
+      "#ff9506",
+      "#7b571e",
+      "#c4280d",
+      "#efd185",
+      "#2b0f0b",
+      "#12887f"
+    ],
+    "source": "Wes Anderson - Kind of Bird.jpg",
+    "dist": null
+  },
+  {
+    "title": "200523-Wes Anderson - These Were His People",
+    "colors": [
+      "#f29c13",
+      "#217969",
+      "#b05121",
+      "#250809",
+      "#a81971",
+      "#1050a9"
+    ],
+    "source": "Wes Anderson - These Were His People.jpg",
+    "dist": null
+  },
+  {
+    "title": "200524-Wes Anderson - A Sound System",
+    "colors": [
+      "#aa6d24",
+      "#f6ad0b",
+      "#0e2e30",
+      "#88280a",
+      "#0cb9c7",
+      "#ca5dca"
+    ],
+    "source": "Wes Anderson - A Sound System.jpg",
+    "dist": null
+  },
+  {
+    "title": "999900-Wes Anderson-Paris Hotel",
+    "colors": [
+      "#c6a677",
+      "#d3952d",
+      "#718360",
+      "#496456",
+      "#cad6d4",
+      "#241b07"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\palette\\input\\00-holding-paris-hotels.jpg",
+    "dist": null
+  },
+  {
+    "title": "z-Wes Anderson-Hotel Chevalier ",
+    "colors": [
+      "#f5d32a",
+      "#e6a82c",
+      "#d6882b",
+      "#d8b678",
+      "#160804",
+      "#3b6c8a"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\palette\\input\\yellow.jpg",
+    "dist": null
+  },
+  {
+    "title": "200525-Kees van Dongen - Gisele_0",
+    "colors": [
+      "#082d89",
+      "#4e7399",
+      "#89afce",
+      "#d5b04b",
+      "#a44d14",
+      "#2f955b"
+    ],
+    "source": "Kees van Dongen - Gisele.jpg",
+    "dist": null
+  },
+  {
+    "title": "200526-Kees van Dongen - Femme Arabe",
+    "colors": [
+      "#0c1f33",
+      "#995704",
+      "#d87c52",
+      "#be991b",
+      "#2e7a8e",
+      "#426324"
+    ],
+    "source": "Kees van Dongen - Femme Arabe.jpg",
+    "dist": null
+  },
+  {
+    "title": "200527-Kees van Dongen - Corn Poppy_0",
+    "colors": [
+      "#946a06",
+      "#cf3805",
+      "#aec049",
+      "#ffc740",
+      "#251809",
+      "#0e7653"
+    ],
+    "source": "Kees van Dongen - Corn Poppy.jpg",
+    "dist": null
+  },
+  {
+    "title": "200528-Kees van Dongen - Lady in a Black Hat_0",
+    "colors": [
+      "#100e04",
+      "#837600",
+      "#99ae57",
+      "#ffe252",
+      "#e1814c",
+      "#0d8591"
+    ],
+    "source": "Kees van Dongen - Lady in a Black Hat.jpg",
+    "dist": null
+  },
+  {
+    "title": "200529-Kees van Dongen - Maria_0",
+    "colors": [
+      "#c30000",
+      "#000004",
+      "#562e37",
+      "#fa6952",
+      "#e0bc72",
+      "#708078",
+      "#2057a0"
+    ],
+    "source": "Kees van Dongen - Maria.jpg",
+    "dist": null
+  },
+  {
+    "title": "200531-Kees van Dongen - Lou Lou_0",
+    "colors": [
+      "#ccc9a5",
+      "#978e76",
+      "#cbb30c",
+      "#626139",
+      "#e02810",
+      "#906088"
+    ],
+    "source": "Kees van Dongen - Lou Lou.jpg",
+    "dist": null
+  },
+  {
+    "title": "200601-Chiyogami-Washi7_0",
+    "colors": [
+      "#4956b9",
+      "#252563",
+      "#7d3e8c",
+      "#e04110",
+      "#f0b110",
+      "#707070"
+    ],
+    "source": "Washi7.jpg",
+    "dist": null
+  },
+  {
+    "title": "200602-Chiyogami-Washi6_0",
+    "colors": [
+      "#5984b9",
+      "#4cb9ff",
+      "#2f9aaa",
+      "#384666",
+      "#c04420",
+      "#b0ac30"
+    ],
+    "source": "Washi6.jpg",
+    "dist": null
+  },
+  {
+    "title": "200603-Chiyogami-Washi5_0",
+    "colors": [
+      "#b1b56b",
+      "#515850",
+      "#202030",
+      "#deb38d",
+      "#d63310",
+      "#906082"
+    ],
+    "source": "Washi5.jpg",
+    "dist": null
+  },
+  {
+    "title": "200604-Chiyogami - Washi4_0",
+    "colors": [
+      "#e41410",
+      "#325010",
+      "#385b80",
+      "#d09c70",
+      "#f0e900",
+      "#729a8a"
+    ],
+    "source": "Washi4.jpg",
+    "dist": null
+  },
+  {
+    "title": "200605-Chiyogami - Washi1_1",
+    "colors": [
+      "#ebe394",
+      "#bca686",
+      "#d59e00",
+      "#ec7818",
+      "#4b7822",
+      "#d05067"
+    ],
+    "source": "Washi1.jpg",
+    "dist": null
+  },
+  {
+    "title": "200606-Chiyogami-Washi3",
+    "colors": [
+      "#0b0401",
+      "#e53d11",
+      "#854d23",
+      "#cfb072",
+      "#20603a",
+      "#355a83"
+    ],
+    "source": "Washi3.jpg",
+    "dist": null
+  },
+  {
+    "title": "200607-Chiyogami - Washi2",
+    "colors": [
+      "#a09b50",
+      "#80a08c",
+      "#99a7bc",
+      "#bec9c2",
+      "#d08520",
+      "#c05f30"
+    ],
+    "source": "Washi2.jpg",
+    "dist": null
+  },
+  {
+    "title": "200608-Finch Davies - Green Pigeon",
+    "colors": [
+      "#7c8010",
+      "#504d10",
+      "#bed030",
+      "#a7c0a7",
+      "#e04d10",
+      "#906220"
+    ],
+    "source": "Finch Davies - Green Pigeon.jpg",
+    "dist": null
+  },
+  {
+    "title": "200609-Finch Davies - Pygmy Falcon",
+    "colors": [
+      "#102030",
+      "#9d4420",
+      "#707780",
+      "#b0bdd0",
+      "#f0a600",
+      "#91326e"
+    ],
+    "source": "Finch Davies - Pygmy Falcon.jpg",
+    "dist": null
+  },
+  {
+    "title": "200610-Finch Davies - Flamingo_1",
+    "colors": [
+      "#151718",
+      "#d05054",
+      "#7b8684",
+      "#abbaba",
+      "#d07e40",
+      "#20bdc0"
+    ],
+    "source": "Finch Davies - flamingo.jpg",
+    "dist": null
+  },
+  {
+    "title": "200611-Finch Davies - Piciformes",
+    "colors": [
+      "#301011",
+      "#634238",
+      "#a285b3",
+      "#e0a640",
+      "#bc1a10",
+      "#eb6511"
+    ],
+    "source": "Finch Davies - Piciformes.jpg",
+    "dist": null
+  },
+  {
+    "title": "200612-Finch Davies - Sparrowhawk",
+    "colors": [
+      "#cbbcc0",
+      "#e4c95d",
+      "#e08a28",
+      "#bc4314",
+      "#494949",
+      "#301200"
+    ],
+    "source": "Finch Davies - Sparrowhawk.jpg",
+    "dist": null
+  },
+  {
+    "title": "200613-Finch Davies - Plicatus",
+    "colors": [
+      "#849395",
+      "#d2c198",
+      "#876c44",
+      "#363534",
+      "#576d83",
+      "#8e3918"
+    ],
+    "source": "Finch Davies - Plicatus.jpg",
+    "dist": null
+  },
+  {
+    "title": "200614-Finch Davies - Heron",
+    "colors": [
+      "#f08f00",
+      "#e03710",
+      "#804220",
+      "#030302",
+      "#e0b910",
+      "#774792"
+    ],
+    "source": "Finch Davies - Heron.jpg",
+    "dist": null
+  },
+  {
+    "title": "200615 - American Novel  - Catch 22",
+    "colors": [
+      "#f0ca80",
+      "#e03010",
+      "#303180",
+      "#0c0302",
+      "#f08920",
+      "#61b53a"
+    ],
+    "source": "American Novel  - Catch 22.jpg",
+    "dist": null
+  },
+  {
+    "title": "200616 - American Novel - The Sun Also Rises",
+    "colors": [
+      "#f0e5d0",
+      "#ffc943",
+      "#306eb0",
+      "#806850",
+      "#d05020",
+      "#6b4d86"
+    ],
+    "source": "American Novel - The Sun Also Rises.jpg",
+    "dist": null
+  },
+  {
+    "title": "200617 - American Novel - Hondo",
+    "colors": [
+      "#e0c780",
+      "#d09640",
+      "#904430",
+      "#302320",
+      "#e06f40",
+      "#744190"
+    ],
+    "source": "American Novel - Hondo.jpg",
+    "dist": null
+  },
+  {
+    "title": "200618 - American Novel - Eldorado Red",
+    "colors": [
+      "#e6d9b2",
+      "#a05a30",
+      "#555946",
+      "#212b26",
+      "#00aac0",
+      "#51b350"
+    ],
+    "source": "American Novel - Eldorado Red.jpg",
+    "dist": null
+  },
+  {
+    "title": "200619 - American Novel - Moby Dick",
+    "colors": [
+      "#e0c690",
+      "#70907a",
+      "#506058",
+      "#14151a",
+      "#e02810",
+      "#444a92"
+    ],
+    "source": "American Novel - Moby Dick.jpg",
+    "dist": null
+  },
+  {
+    "title": "200620 - American Novel - The Awakening",
+    "colors": [
+      "#373737",
+      "#b04e40",
+      "#d08030",
+      "#e0c380",
+      "#744090",
+      "#097fbe"
+    ],
+    "source": "American Novel - The Awakening.jpg",
+    "dist": null
+  },
+  {
+    "title": "200621 - American Novel - The Great Gatsby",
+    "colors": [
+      "#f1cea2",
+      "#e1ac4e",
+      "#b47e2e",
+      "#6c6c1d",
+      "#90c040",
+      "#e31113"
+    ],
+    "source": "American Novel - The Great Gatsby.jpg",
+    "dist": null
+  },
+  {
+    "title": "200622 - Technicolor - Leslie Caron(2)",
+    "colors": [
+      "#945d39",
+      "#d5940f",
+      "#1b1612",
+      "#e3d3bc",
+      "#7cb764",
+      "#309ac0"
+    ],
+    "source": "Technicolor - Leslie Caron.jpg",
+    "dist": null
+  },
+  {
+    "title": "200623 - Technicolor - Yul Brynner",
+    "colors": [
+      "#277b8c",
+      "#004486",
+      "#0a0605",
+      "#a1a1a1",
+      "#d08b20",
+      "#74ae36"
+    ],
+    "source": "Technicolor - Yul Brynner.jpg",
+    "dist": null
+  },
+  {
+    "title": "200624 - Technicolor - American in Paris",
+    "colors": [
+      "#200002",
+      "#d09960",
+      "#e02110",
+      "#701e10",
+      "#404790",
+      "#61b53a"
+    ],
+    "source": "Technicolor - American in Paris.jpg",
+    "dist": null
+  },
+  {
+    "title": "200625 - Technicolor - Meet Me in St Louis",
+    "colors": [
+      "#624090",
+      "#0b0a0c",
+      "#d07920",
+      "#c0b330",
+      "#356eac",
+      "#d02043"
+    ],
+    "source": "Technicolor - Meet Me in St Louis.jpg",
+    "dist": null
+  },
+  {
+    "title": "200626 - Technicolor - Robin and Marian",
+    "colors": [
+      "#702920",
+      "#1a2615",
+      "#517050",
+      "#d0c370",
+      "#445392",
+      "#d13b8d"
+    ],
+    "source": "Technicolor - Robin and Marian.jpg",
+    "dist": null
+  },
+  {
+    "title": "200627 - Technicolor - No No Nanette",
+    "colors": [
+      "#407069",
+      "#2c282a",
+      "#905020",
+      "#d0b070",
+      "#b94e86",
+      "#507aa0"
+    ],
+    "source": "Technicolor - No No Nanette.jpg",
+    "dist": null
+  },
+  {
+    "title": "200628 - Technicolor - Fantasia Mushrooms",
+    "colors": [
+      "#507280",
+      "#0b0506",
+      "#e0101c",
+      "#908a60",
+      "#5b4588",
+      "#f1d808"
+    ],
+    "source": "Technicolor - Fantasia Mushrooms.jpg",
+    "dist": null
+  },
+  {
+    "title": "200629 - Van Gogh - The Old Mill",
+    "colors": [
+      "#030304",
+      "#404e90",
+      "#a06e10",
+      "#d0bd20",
+      "#275010",
+      "#66968a"
+    ],
+    "source": "Van Gogh - The Old Mill.jpg",
+    "dist": null
+  },
+  {
+    "title": "200630 - Van Gogh - Mountain St Remy",
+    "colors": [
+      "#444a3b",
+      "#7b884b",
+      "#dadbaf",
+      "#df9b37",
+      "#466e9e",
+      "#803030"
+    ],
+    "source": "Van Gogh - mountain-st-remy.jpg",
+    "dist": null
+  },
+  {
+    "title": "200701 - Van Gogh - Sunflowers_1",
+    "colors": [
+      "#a02110",
+      "#c07730",
+      "#d0ba20",
+      "#80b09e",
+      "#3d5529",
+      "#160900"
+    ],
+    "source": "Van Gogh - Sunflowers.jpg",
+    "dist": null
+  },
+  {
+    "title": "200702 - Van Gogh - Les Vaches",
+    "colors": [
+      "#702010",
+      "#b06520",
+      "#51781e",
+      "#94c358",
+      "#dcacae",
+      "#0a1c00"
+    ],
+    "source": "Van Gogh - Les_vaches_Van_Gogh.jpg",
+    "dist": null
+  },
+  {
+    "title": "200703 - Van Gogh - Green Wheat Fields_3",
+    "colors": [
+      "#dfe8b8",
+      "#bbbd37",
+      "#5db832",
+      "#667c0c",
+      "#5fa0a4",
+      "#c99175"
+    ],
+    "source": "Van Gogh - Green Wheat Fields.jpg",
+    "dist": null
+  },
+  {
+    "title": "200704 - Van Gogh - Irisis",
+    "colors": [
+      "#ddeac0",
+      "#809c19",
+      "#d68d0f",
+      "#206aa0",
+      "#1c231b",
+      "#c0a8ac"
+    ],
+    "source": "Van Gogh - Irisis.jpg",
+    "dist": null
+  },
+  {
+    "title": "200705 - Van Gogh - Caf\u00e9 Terrace at Night",
+    "colors": [
+      "#6563e0",
+      "#2b2b5f",
+      "#000000",
+      "#d08d00",
+      "#803510",
+      "#70c070"
+    ],
+    "source": "Van Gogh - Caf\u00e9 Terrace at Night.jpg",
+    "dist": null
+  },
+  {
+    "title": "200706 - Sam Francis - Green Yellow Blue Red",
+    "colors": [
+      "#208054",
+      "#0056a0",
+      "#f0db00",
+      "#e03010",
+      "#602034",
+      "#a0b1c0"
+    ],
+    "source": "Sam Francis - Green Yellow Blue Red.jpg",
+    "dist": null
+  },
+  {
+    "title": "200707 - Sam Francis - Doubled Cross",
+    "colors": [
+      "#0096ca",
+      "#005196",
+      "#360937",
+      "#e01014",
+      "#21572b",
+      "#f0ad00"
+    ],
+    "source": "Sam Francis - Doubled Cross.jpg",
+    "dist": null
+  },
+  {
+    "title": "200708 - Sam Francis - Middle Blue",
+    "colors": [
+      "#382736",
+      "#005780",
+      "#d05100",
+      "#d0b890",
+      "#10a8b0",
+      "#205031"
+    ],
+    "source": "Sam Francis - Middle Blue.jpg",
+    "dist": null
+  },
+  {
+    "title": "200709 - Sam Francis - 1988",
+    "colors": [
+      "#406880",
+      "#0a0a0a",
+      "#e0101c",
+      "#f0d200",
+      "#005e29",
+      "#870f55"
+    ],
+    "source": "Sam Francis - 1988.jpg",
+    "dist": null
+  },
+  {
+    "title": "200710 - Sam Francis - Basel Mural",
+    "colors": [
+      "#d0c590",
+      "#202430",
+      "#b05120",
+      "#f0b000",
+      "#406e80",
+      "#65a59e"
+    ],
+    "source": "Sam Francis - Basel Mural.jpg",
+    "dist": null
+  },
+  {
+    "title": "200711 - Sam Francis - Cold Spring",
+    "colors": [
+      "#01ad8a",
+      "#00503a",
+      "#006496",
+      "#2fc0ff",
+      "#e0c410",
+      "#d05052"
+    ],
+    "source": "Sam Francis - Cold Spring.jpg",
+    "dist": null
+  },
+  {
+    "title": "200712 - Sam Francis - Blue Symphony",
+    "colors": [
+      "#e29b10",
+      "#42899a",
+      "#003190",
+      "#000000",
+      "#902c20",
+      "#99c080"
+    ],
+    "source": "Sam Francis - Blue Symphony.jpg",
+    "dist": null
+  },
+  {
+    "title": "200713 - Frank Stella - Jarmolince III",
+    "colors": [
+      "#10502d",
+      "#205690",
+      "#904330",
+      "#e09310",
+      "#70a076",
+      "#161118",
+      "#200713"
+    ],
+    "source": "200713 - Frank Stella - Jarmolince .jpg",
+    "dist": null
+  },
+  {
+    "title": "Frank Stella - Darabjerd I_d1",
+    "colors": [
+      "#004ea0",
+      "#ef2137",
+      "#551c0d",
+      "#03b238",
+      "#20604b",
+      "#d09c60"
+    ],
+    "source": "Frank Stella - Darabjerd I.jpg",
+    "dist": null
+  },
+  {
+    "title": "Frank Stella - Khurasan Gate III_s1",
+    "colors": [
+      "#792d37",
+      "#f0d300",
+      "#d95f21",
+      "#2d98cf",
+      "#70b07c",
+      "#c7bbc3"
+    ],
+    "source": "Frank Stella - Khurasan Gate III.jpg",
+    "dist": null
+  },
+  {
+    "title": "Frank Stella - Perspective_s1",
+    "colors": [
+      "#68311a",
+      "#4e4090",
+      "#ef5a21",
+      "#f0ba40",
+      "#1b2010",
+      "#909090"
+    ],
+    "source": "Frank Stella - Perspective.jpg",
+    "dist": null
+  },
+  {
+    "title": "Frank Stella - Protractor Variation_e1",
+    "colors": [
+      "#b5362d",
+      "#2d276b",
+      "#b08e60",
+      "#137fcb",
+      "#b34e8f",
+      "#b0bbc0"
+    ],
+    "source": "Frank Stella - Protractor Variation.jpg",
+    "dist": null
+  },
+  {
+    "title": "Frank Stella - Stesiphon_d0",
+    "colors": [
+      "#018cc1",
+      "#305043",
+      "#ef653b",
+      "#85a45b",
+      "#f0b400",
+      "#b0cdd0"
+    ],
+    "source": "Frank Stella - Stesiphon.jpg",
+    "dist": null
+  },
+  {
+    "title": "Frank Stella - Talladega II_e3",
+    "colors": [
+      "#e1d199",
+      "#409958",
+      "#502618",
+      "#ce603c",
+      "#405490",
+      "#009dc0"
+    ],
+    "source": "Frank Stella - Talladega II.jpg",
+    "dist": null
+  },
+  {
+    "title": "John James Audubon - Barn Owl(2)_e0",
+    "colors": [
+      "#363633",
+      "#f0d290",
+      "#c4632d",
+      "#688775",
+      "#705030",
+      "#a08b60"
+    ],
+    "source": "John James Audubon - Barn Owl(2).jpg",
+    "dist": null
+  },
+  {
+    "title": "John James Audubon - Bluejay(2)_s1",
+    "colors": [
+      "#404090",
+      "#3c2e0d",
+      "#b7763c",
+      "#eadfc7",
+      "#a64b5c",
+      "#a6a0c0"
+    ],
+    "source": "John James Audubon - Bluejay(2).jpg",
+    "dist": null
+  },
+  {
+    "title": "John James Audubon - Brown Pelican_d0",
+    "colors": [
+      "#63a24e",
+      "#f09f3c",
+      "#8f481d",
+      "#181110",
+      "#30605f",
+      "#b0d2e0"
+    ],
+    "source": "John James Audubon - Brown Pelican.jpg",
+    "dist": null
+  },
+  {
+    "title": "John James Audubon - Cardinal_s0",
+    "colors": [
+      "#201f10",
+      "#658040",
+      "#e09410",
+      "#e04430",
+      "#a0c0bf",
+      "#303060"
+    ],
+    "source": "John James Audubon - Cardinal.jpg",
+    "dist": null
+  },
+  {
+    "title": "John James Audubon - Flamingo_s3",
+    "colors": [
+      "#0f1000",
+      "#810a14",
+      "#e3617d",
+      "#f7d2bb",
+      "#70a098",
+      "#705e10"
+    ],
+    "source": "John James Audubon - Flamingo.jpg",
+    "dist": null
+  },
+  {
+    "title": "John James Audubon - Swift Fox_s1",
+    "colors": [
+      "#84410a",
+      "#efa027",
+      "#67752e",
+      "#dfeec3",
+      "#171617",
+      "#306060"
+    ],
+    "source": "John James Audubon - Swift Fox.jpg",
+    "dist": null
+  },
+  {
+    "title": "John James Audubon -Great Blue Heron(2)_d0",
+    "colors": [
+      "#7d5a3f",
+      "#101518",
+      "#cdb081",
+      "#3b7b87",
+      "#a0c0bc",
+      "#60304b"
+    ],
+    "source": "John James Audubon -Great Blue Heron(2).jpg",
+    "dist": null
+  },
+  {
+    "title": "Flower - Marrs Green_e3",
+    "colors": [
+      "#000000",
+      "#1b4d4f",
+      "#4bb1ae",
+      "#d2e0d5",
+      "#f09f60",
+      "#803920"
+    ],
+    "source": "Flower - Marrs Green.jpg",
+    "dist": null
+  },
+  {
+    "title": "Flower - Melon Red_e1",
+    "colors": [
+      "#f7bbcb",
+      "#f07460",
+      "#b03130",
+      "#e0a760",
+      "#90538b",
+      "#380f10"
+    ],
+    "source": "Flower - Melon Red.jpg",
+    "dist": null
+  },
+  {
+    "title": "Flower - Pale Blue_s2",
+    "colors": [
+      "#a6b7fa",
+      "#7987e5",
+      "#4a55c7",
+      "#5a6362",
+      "#c3c8c7",
+      "#181627"
+    ],
+    "source": "Flower - Pale Blue.jpg",
+    "dist": null
+  },
+  {
+    "title": "Flower - Pink and Green_s0",
+    "colors": [
+      "#f6a8f8",
+      "#b456b7",
+      "#a78788",
+      "#ddd5d4",
+      "#96cb53",
+      "#645804"
+    ],
+    "source": "Flower - Pink Green.jpg",
+    "dist": null
+  },
+  {
+    "title": "Flower - Purple and Orange_e0",
+    "colors": [
+      "#604090",
+      "#9890f0",
+      "#e05500",
+      "#f0b000",
+      "#b0ecf0",
+      "#803036"
+    ],
+    "source": "Flower - Purple and Orange.jpg",
+    "dist": null
+  },
+  {
+    "title": "Flower - Yellow and Green_d1",
+    "colors": [
+      "#003017",
+      "#207056",
+      "#f0c070",
+      "#f08c10",
+      "#a0e0c4",
+      "#705200"
+    ],
+    "source": "Flower - Yellow and Green.jpg",
+    "dist": null
+  },
+  {
+    "title": "Flower - Yellow_s2",
+    "colors": [
+      "#fdd358",
+      "#faa738",
+      "#b88835",
+      "#e8c8a8",
+      "#5f669a",
+      "#602523"
+    ],
+    "source": "Flower - Yellow.jpg",
+    "dist": null
+  },
+  {
+    "title": "Utagawa Hiroshige - Bridge_s0",
+    "colors": [
+      "#476765",
+      "#4a4435",
+      "#865134",
+      "#a78b59",
+      "#000000",
+      "#d7ccab"
+    ],
+    "source": "Utagawa Hiroshige - Bridge.jpg",
+    "dist": null
+  },
+  {
+    "title": "Utagawa Hiroshige - Cherry Blossoms_e0",
+    "colors": [
+      "#e6dacb",
+      "#93ab87",
+      "#64665a",
+      "#c66863",
+      "#000000",
+      "#781826"
+    ],
+    "source": "Utagawa Hiroshige - Cherry Blossoms.jpg",
+    "dist": null
+  },
+  {
+    "title": "Utagawa Hiroshige - Great Wave off Kanagawa_e2",
+    "colors": [
+      "#deded3",
+      "#86a8b6",
+      "#4376af",
+      "#516c57",
+      "#000000",
+      "#a82724"
+    ],
+    "source": "Utagawa Hiroshige - Great Wave off Kanagawa.jpg",
+    "dist": null
+  },
+  {
+    "title": "Utagawa Hiroshige - Hakone View of the Lake_d1",
+    "colors": [
+      "#544746",
+      "#c2584b",
+      "#958d76",
+      "#487994",
+      "#000000",
+      "#c9e8d2"
+    ],
+    "source": "Utagawa Hiroshige - Hakone View of the Lake.jpg",
+    "dist": null
+  },
+  {
+    "title": "Utagawa Hiroshige - Maiko Beach_e0",
+    "colors": [
+      "#3e6ba1",
+      "#777776",
+      "#864c4a",
+      "#0b1221",
+      "#b1b1b1",
+      "#d48978"
+    ],
+    "source": "Utagawa Hiroshige - Maiko Beach.jpg",
+    "dist": null
+  },
+  {
+    "title": "Utagawa Hiroshige - Sakura_e3",
+    "colors": [
+      "#dbd6da",
+      "#6c8199",
+      "#817d5c",
+      "#b76269",
+      "#000000",
+      "#5e331d"
+    ],
+    "source": "Utagawa Hiroshige - Sakura.jpg",
+    "dist": null
+  },
+  {
+    "title": "Utagawa Hiroshige - Satta Peak at Yui_s0",
+    "colors": [
+      "#686457",
+      "#5d8a6e",
+      "#a79876",
+      "#f59857",
+      "#2e2f2b",
+      "#eef2bf"
+    ],
+    "source": "Utagawa Hiroshige - Satta Peak at Yui.jpg",
+    "dist": null
+  },
+  {
+    "title": "Rodent - Fox Squirrel",
+    "colors": [
+      "#a85329",
+      "#562a18",
+      "#64594a",
+      "#91826f",
+      "#000000",
+      "#d9d9d9"
+    ],
+    "source": "animal-605329_1920.jpg",
+    "dist": null
+  },
+  {
+    "title": "Rodent - Hamster",
+    "colors": [
+      "#040302",
+      "#7e4b45",
+      "#dc873b",
+      "#e0e0d1",
+      "#877658",
+      "#494437"
+    ],
+    "source": "28TB-RODENTS3-videoSixteenByNineJumbo1600.jpg",
+    "dist": null
+  },
+  {
+    "title": "Rodent - Prairie Dog",
+    "colors": [
+      "#476802",
+      "#654b02",
+      "#998369",
+      "#93a457",
+      "#000000",
+      "#d4d8dd"
+    ],
+    "source": "surprised-3786845_1920.jpg",
+    "dist": null
+  },
+  {
+    "title": "Rodent - Rabbit",
+    "colors": [
+      "#e7c701",
+      "#99ad9a",
+      "#359c4e",
+      "#685702",
+      "#000000",
+      "#293517"
+    ],
+    "source": "rabbit-1882699.jpg",
+    "dist": null
+  },
+  {
+    "title": "Rodent - Rat",
+    "colors": [
+      "#a4c8e8",
+      "#877569",
+      "#d5aa97",
+      "#d9d5a8",
+      "#241b1a",
+      "#4a5655"
+    ],
+    "source": "roof-rat-961499_1920.jpg",
+    "dist": null
+  },
+  {
+    "title": "Rodent - Squirrel",
+    "colors": [
+      "#3d3f36",
+      "#774639",
+      "#a67b66",
+      "#a0a2a2",
+      "#000000",
+      "#d9d8d8"
+    ],
+    "source": "squirrel-612369_1920.jpg",
+    "dist": null
+  },
+  {
+    "title": "Rodent - Sugar Glider",
+    "colors": [
+      "#000000",
+      "#d7dad7",
+      "#52524e",
+      "#858d7b",
+      "#4a657a",
+      "#a88673"
+    ],
+    "source": "elite-daily-envision-sugar-glider.jpg",
+    "dist": null
+  },
+  {
+    "title": "Soviet Children's Books - Doctor Ouch",
+    "colors": [
+      "#f97526",
+      "#864a24",
+      "#160a04",
+      "#555836",
+      "#9e8e64",
+      "#3f478d"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\7TYXVuuGUB0gJ0yfL6C2Lx3LEXxNuzjkHwYIPpsh7Axo8MKTurRN3-T-lu8tkDJGEolaqUil_xPBLMLNytS1oDl557kz-oxcDgOQ7KOoomnDgzwzzthHokFen5rrScTq.jpg",
+    "dist": null
+  },
+  {
+    "title": "Soviet Children's Books - Estonian Tales",
+    "colors": [
+      "#f9a945",
+      "#e76717",
+      "#475539",
+      "#573617",
+      "#869778",
+      "#9a3647"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\EfLJuwfWAAEEhI6.jpg",
+    "dist": null
+  },
+  {
+    "title": "Soviet Children's Books - Inverted Tree",
+    "colors": [
+      "#e45769",
+      "#e9a587",
+      "#452826",
+      "#857a75",
+      "#a4cba5",
+      "#244a80"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\OxHn86UJtSLFOegl2JF4XQF0wQKzUyZ5WTkDVfFS4S2Ev3sUK6__vtOu02Z4Wt5rr2ThBP7tWeh070eKTLWxeBFBHqNgu76QBhPFQx7aSVFAHbyz4gteTCX6-GKKWRc7.jpg",
+    "dist": null
+  },
+  {
+    "title": "Soviet Children's Books - Little Humpbacked Horse",
+    "colors": [
+      "#e9b875",
+      "#171716",
+      "#c76657",
+      "#582b1e",
+      "#a9cda1",
+      "#54374b"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\OxHn86UJtSLFOegl2JF4XQF0wQKzUyZ5WTkDVfFS4S2Ev3sUK6__vtOu02Z4Wt5rr2ThBP7tWeh070eKTLWxeKw_rjnsIcntYRnQU9w7u30r3yJipiBbvWRaqqanrSna.jpg",
+    "dist": null
+  },
+  {
+    "title": "Soviet Children's Books - Slavic Tales",
+    "colors": [
+      "#e8743b",
+      "#e4a969",
+      "#a73629",
+      "#191614",
+      "#625726",
+      "#bac59d"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\EfLJuGRXkAE85XH.jpg",
+    "dist": null
+  },
+  {
+    "title": "Soviet Children's Books - Tale of the Forest",
+    "colors": [
+      "#d62618",
+      "#f5cb75",
+      "#477926",
+      "#63220f",
+      "#523848",
+      "#3f7287"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\7TYXVuuGUB0gJ0yfL6C2Lx3LEXxNuzjkHwYIPpsh7Axo8MKTurRN3-T-lu8tkDJGEolaqUil_xPBLMLNytS1oAUMVHDpDNiaRe5GtcMxkS1qjEjjAeHs84uPc74dwXJA.jpg",
+    "dist": null
+  },
+  {
+    "title": "Soviet Children's Books - Yuri Cat",
+    "colors": [
+      "#b74637",
+      "#d8a797",
+      "#050403",
+      "#674727",
+      "#748b59",
+      "#709895"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\7TYXVuuGUB0gJ0yfL6C2Lx3LEXxNuzjkHwYIPpsh7Axo8MKTurRN3-T-lu8tkDJGEolaqUil_xPBLMLNytS1oL0-nPS-ErT_-RAxWJcKzxJ4uO7L6z3zt-wDGyPB3gyA.jpg",
+    "dist": null
+  },
+  {
+    "title": "Robert McCloskey - Boy and His Dog",
+    "colors": [
+      "#85bbb7",
+      "#e8d598",
+      "#a45a32",
+      "#5d6c5e",
+      "#0599d3",
+      "#c79757"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\McCloskeya.jpg",
+    "dist": null
+  },
+  {
+    "title": "Robert McCloskey - Gulls",
+    "colors": [
+      "#a49a97",
+      "#585757",
+      "#885656",
+      "#598384",
+      "#292727",
+      "#89c5c6"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\McCloskeyc.jpg",
+    "dist": null
+  },
+  {
+    "title": "Robert McCloskey - Morning in Maine",
+    "colors": [
+      "#f9b537",
+      "#966748",
+      "#c58a57",
+      "#eab278",
+      "#583925",
+      "#bb6506"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\c92a304474d34aeebc37666a8a5929e2 one morning in Main.jpg",
+    "dist": null
+  },
+  {
+    "title": "Robert McCloskey - Officer Michael",
+    "colors": [
+      "#d39967",
+      "#a97457",
+      "#764b35",
+      "#372517",
+      "#000000",
+      "#ac9268"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\5410a08e6605423e92b6744747659427.jpg",
+    "dist": null
+  },
+  {
+    "title": "Robert McCloskey - Seaside",
+    "colors": [
+      "#675547",
+      "#a8a8a7",
+      "#c59857",
+      "#c62a0a",
+      "#fac536",
+      "#57757a"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\91e220cc116a460cb651df7badd4bb6e.jpg",
+    "dist": null
+  },
+  {
+    "title": "Robert McCloskey - Swan Boats",
+    "colors": [
+      "#d8a887",
+      "#052458",
+      "#285588",
+      "#647c96",
+      "#b66a47",
+      "#5d301f"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\6b939d07930a46a3a180ae3e663860fe.jpg",
+    "dist": null
+  },
+  {
+    "title": "Robert McCloskey - Time of Wonder",
+    "colors": [
+      "#c6c799",
+      "#a8aaa8",
+      "#397775",
+      "#74a393",
+      "#d58c55",
+      "#c42f33"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\McCloskey2.jpg",
+    "dist": null
+  },
+  {
+    "title": "Hollywood - Audrey Hepburn",
+    "colors": [
+      "#779b96",
+      "#563839",
+      "#d5948b",
+      "#a76965",
+      "#1b1414",
+      "#b83c29"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\o-AUDREY-HEPBURN-facebook.jpg",
+    "dist": null
+  },
+  {
+    "title": "Hollywood - Bette Davis",
+    "colors": [
+      "#361803",
+      "#dcc298",
+      "#4b5302",
+      "#987627",
+      "#b9a547",
+      "#772816"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\bette-davis-bc_uobazy.jpg",
+    "dist": null
+  },
+  {
+    "title": "Hollywood - Cary Grant",
+    "colors": [
+      "#933b26",
+      "#091911",
+      "#a98469",
+      "#563728",
+      "#a9bab7",
+      "#355149"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\a3b68778-5b89-11e2-8ccc-00144feab49a.jpg",
+    "dist": null
+  },
+  {
+    "title": "Hollywood - Humphrey Bogart",
+    "colors": [
+      "#da7946",
+      "#251c14",
+      "#876856",
+      "#64898a",
+      "#684637",
+      "#495658"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\humphrey-bogart.jpg",
+    "dist": null
+  },
+  {
+    "title": "Hollywood - Ingrid Bergman",
+    "colors": [
+      "#583618",
+      "#d9a886",
+      "#181513",
+      "#965937",
+      "#3b4233",
+      "#78858c"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\0hK_syIfuXkK5f7yc.jpg",
+    "dist": null
+  },
+  {
+    "title": "Hollywood - Lucille Ball",
+    "colors": [
+      "#01a3ab",
+      "#d9a677",
+      "#a5ada3",
+      "#842b16",
+      "#5c6565",
+      "#1b304c"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\083116-lucille-ball-home-LEAD.jpg",
+    "dist": null
+  },
+  {
+    "title": "Hollywood - Vera Ellen",
+    "colors": [
+      "#a39a69",
+      "#874718",
+      "#976828",
+      "#c59549",
+      "#1a1907",
+      "#c46d38"
+    ],
+    "source": "C:\\Users\\shaya\\PycharmProjects\\private_libraries\\palette200428\\input\\7185123_orig.jpg",
+    "dist": null
+  }
+]
