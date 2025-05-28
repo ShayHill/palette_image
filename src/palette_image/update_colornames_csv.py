@@ -24,7 +24,7 @@ today = str(datetime.datetime.now(tz=datetime.UTC).date())
 
 _COLORNAMES_CSV_URL = (
     "https://raw.githubusercontent.com/meodai/"
-    + "color-names/refs/heads/master/dist/colornames.csv"
+    + "color-names/refs/heads/main/src/colornames.csv"
 )
 
 _DATE_CHECKED_CACHE = CACHE_DIR / "colornames_date_checked_cache.txt"
